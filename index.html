@@ -793,7 +793,7 @@ function renderUpcoming(){
     
     html += `
       <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 ${isFront ? '' : 'pointer-events-none'}" 
-           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity}; ${!isFront ? 'overflow:hidden; border-radius:1.5rem;' : ''}">
+           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity};">
         <div class="relative p-[1px] rounded-3xl bg-gradient-to-br from-amber-400/60 via-purple-500/30 to-transparent shadow-[0_0_20px_rgba(245,158,11,0.15)] h-full ${isFront ? 'cursor-pointer hover:shadow-[0_0_30px_rgba(245,158,11,0.25)]' : ''}" 
              ${isFront ? `data-id="${next.id}"` : ''}>
           
@@ -804,13 +804,12 @@ function renderUpcoming(){
           </div>
           ` : ''}
 
-          <div class="glass p-5 rounded-[23px] h-full flex flex-col justify-center bg-[#0a0a0f]/80 relative">
-            ${isFront ? `
+          ${isFront ? `
+          <div class="glass p-5 rounded-[23px] h-full flex flex-col justify-center relative" style="background: #0a0a0f;">
             <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen aktiv' : 'Erinnerungen aktivieren'}"
                     class="absolute top-3 right-3 text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
               ${state.notifyEnabled ? '🔔' : '🔕'}
             </button>
-            ` : ''}
             <div class="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-3 flex items-center gap-2">
               <span>⚡ ${isToday ? 'Interview Heute!' : 'Geplantes Interview'}</span>
             </div>
@@ -827,6 +826,9 @@ function renderUpcoming(){
               </div>
             </div>
           </div>
+          ` : `
+          <div class="rounded-[23px] h-full" style="background: #12121a;"></div>
+          `}
         </div>
       </div>
     `;
