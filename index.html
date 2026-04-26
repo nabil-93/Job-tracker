@@ -18,12 +18,11 @@
   .bg-grid {
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
     background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
   }
-  .blob { position: absolute; border-radius: 9999px; opacity: .45; animation: float 22s ease-in-out infinite; will-change: transform; }
+  .blob { position: absolute; border-radius: 9999px; opacity: .35; }
   .blob.b1 { width: 520px; height: 520px; left: -120px; top: -120px; background: radial-gradient(circle, rgba(168,85,247,0.8) 0%, transparent 70%); }
   .blob.b2 { width: 480px; height: 480px; right: -120px; top: 12%; background: radial-gradient(circle, rgba(236,72,153,0.8) 0%, transparent 70%); animation-delay: -7s; }
   .blob.b3 { width: 460px; height: 460px; left: 30%; bottom: -160px; background: radial-gradient(circle, rgba(245,158,11,0.8) 0%, transparent 70%); animation-delay: -14s; }
@@ -72,7 +71,7 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
   .kanban-col { min-height: 200px; min-width: 280px; }
-  .star-on { color: #f59e0b; filter: drop-shadow(0 0 6px rgba(245,158,11,.5)); }
+  .star-on { color: #f59e0b; text-shadow: 0 0 6px rgba(245,158,11,.5); }
 
   /* ==== Auth screen ==== */
   body[data-app="loading"] #appShell, body[data-app="loading"] #authScreen { display: none !important; }
