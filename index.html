@@ -772,24 +772,19 @@ function renderUpcoming(){
   if (state.widgetIndex >= upcoming.length) state.widgetIndex = 0;
   if (state.widgetIndex < 0) state.widgetIndex = upcoming.length - 1;
 
-  let html = `<div class="relative w-full h-[140px] md:h-[150px]" style="overflow:visible;">`;
+  let html = `<div class="relative w-full h-[140px] md:h-[150px]">`;
   
-  // Render cards in reverse order so front card is last in DOM (on top)
-  const cardsToRender = [];
   upcoming.forEach((next, i) => {
     let wrapDiff = i - state.widgetIndex;
     if (wrapDiff < 0) wrapDiff += upcoming.length;
+    
     if (wrapDiff > 2) return;
-    cardsToRender.push({ next, i, wrapDiff });
-  });
-  cardsToRender.sort((a, b) => b.wrapDiff - a.wrapDiff); // back cards first in DOM
-  
-  cardsToRender.forEach(({ next, i, wrapDiff }) => {
+    
     const zIndex = 30 - wrapDiff;
-    const scale = 1 - (wrapDiff * 0.04); 
-    const translateX = wrapDiff * 18;
-    const translateY = wrapDiff * 8;
-    const opacity = 1 - (wrapDiff * 0.3);
+    const scale = 1 - (wrapDiff * 0.05); 
+    const translateX = wrapDiff * 15;
+    const translateY = wrapDiff * 10;
+    const opacity = 1 - (wrapDiff * 0.25);
     
     const dateObj = new Date(next.interview_date);
     const isToday = dateObj.toDateString() === now.toDateString();
@@ -797,37 +792,36 @@ function renderUpcoming(){
     const isFront = wrapDiff === 0;
     
     html += `
-      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 ${isFront ? '' : 'select-none pointer-events-none'}" 
-           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity}; transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease;">
-        <div class="relative p-[1px] rounded-3xl h-full ${isFront ? 'cursor-pointer' : ''}" 
-             style="background: linear-gradient(to bottom right, rgba(251,191,36,0.6), rgba(168,85,247,0.3), transparent); box-shadow: 0 0 20px rgba(245,158,11,0.15);"
+      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0" 
+           style="z-index:${zIndex}; transform:translate(${translateX}px,${translateY}px) scale(${scale}); opacity:${opacity}; transition:transform .3s ease, opacity .3s ease; ${!isFront ? 'pointer-events:none;' : ''}">
+        <div style="position:relative; padding:1px; border-radius:1.5rem; height:100%; background:linear-gradient(to bottom right, rgba(251,191,36,0.6), rgba(168,85,247,0.3), transparent); box-shadow:0 0 20px rgba(245,158,11,0.15); ${isFront ? 'cursor:pointer;' : ''}"
              ${isFront ? `data-id="${next.id}"` : ''}>
           
           ${isFront ? `
-          <div class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4" style="z-index:5;">
-            <span class="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-25"></span>
-            <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-[#0a0a0f]"></span>
+          <div style="position:absolute; top:-4px; right:-4px; width:16px; height:16px; z-index:5;">
+            <span style="position:absolute; display:inline-flex; width:100%; height:100%; border-radius:9999px; background:#fbbf24; opacity:0.25;"></span>
+            <span style="position:relative; display:inline-flex; width:16px; height:16px; border-radius:9999px; background:#f59e0b; border:2px solid #0e0e18;"></span>
           </div>
           ` : ''}
 
-          <div class="p-5 rounded-[23px] h-full flex flex-col justify-center relative" style="background: #0e0e18; border: 1px solid rgba(255,255,255,0.07);">
+          <div style="padding:20px; border-radius:23px; height:100%; display:flex; flex-direction:column; justify-content:center; position:relative; background:#0e0e18; color:#e5e7eb;">
             ${isFront ? `
             <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen aktiv' : 'Erinnerungen aktivieren'}"
-                    class="absolute top-3 right-3 text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
+                    style="position:absolute; top:12px; right:12px; font-size:14px; line-height:1; padding:4px 8px; border-radius:6px; background:none; border:none; color:${state.notifyEnabled ? '#fcd34d' : '#6b7280'}; cursor:pointer;">
               ${state.notifyEnabled ? '🔔' : '🔕'}
             </button>
             ` : ''}
-            <div class="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-3 flex items-center gap-2">
+            <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#fbbf24; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
               <span>⚡ ${isToday ? 'Interview Heute!' : 'Geplantes Interview'}</span>
             </div>
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center shadow-lg text-white leading-tight flex-shrink-0" style="background: linear-gradient(to bottom right, #fbbf24, #f97316);">
-                <div class="text-xl font-black">${dateObj.getDate()}</div>
-                <div class="text-[10px] uppercase font-bold">${dateObj.toLocaleString('de-DE',{month:'short'})}</div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="width:56px; height:56px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(to bottom right,#fbbf24,#f97316); box-shadow:0 10px 15px -3px rgba(0,0,0,0.2); color:#fff; line-height:1.25; flex-shrink:0;">
+                <div style="font-size:1.25rem; font-weight:900;">${dateObj.getDate()}</div>
+                <div style="font-size:10px; text-transform:uppercase; font-weight:700;">${dateObj.toLocaleString('de-DE',{month:'short'})}</div>
               </div>
-              <div class="flex-1 min-w-0 pr-8">
-                <div class="text-white font-bold truncate text-lg mb-1">${esc(next.company)}</div>
-                <div class="text-gray-300 text-xs flex items-center gap-2">
+              <div style="flex:1; min-width:0; padding-right:2rem;">
+                <div style="color:#fff; font-weight:700; font-size:1.125rem; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(next.company)}</div>
+                <div style="color:#d1d5db; font-size:0.75rem; display:flex; align-items:center; gap:8px;">
                   <span style="background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">🕒 ${timeStr} Uhr</span>
                 </div>
               </div>
@@ -842,13 +836,13 @@ function renderUpcoming(){
   
   if (upcoming.length > 1) {
     html += `
-      <div class="flex items-center justify-between mt-8 md:mt-5 px-2 fade-in">
-        <div class="text-xs uppercase tracking-widest text-amber-500/70 font-bold">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:2rem; padding:0 8px;" class="fade-in">
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:rgba(245,158,11,0.7); font-weight:700;">
           ${state.widgetIndex + 1} VON ${upcoming.length}
         </div>
-        <div class="flex gap-2">
-          <button class="w-9 h-9 rounded-full glass border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-amber-500/50 transition-all text-white shadow-lg" data-widget-nav="-1">⬅️</button>
-          <button class="w-9 h-9 rounded-full glass border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-amber-500/50 transition-all text-white shadow-lg" data-widget-nav="1">➡️</button>
+        <div style="display:flex; gap:8px;">
+          <button style="width:36px; height:36px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); color:#fff; cursor:pointer; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);" data-widget-nav="-1">⬅️</button>
+          <button style="width:36px; height:36px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); color:#fff; cursor:pointer; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);" data-widget-nav="1">➡️</button>
         </div>
       </div>
     `;
@@ -862,16 +856,15 @@ window.changeWidgetIndex = function(dir, event) {
   
   const frontCard = document.getElementById('widget-front-card');
   if (frontCard) {
-    // Slide out: card flies to left or right like a page flip
     const slideX = dir > 0 ? '-110%' : '110%';
-    frontCard.style.transition = 'transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s ease';
+    frontCard.style.transition = 'transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease';
     frontCard.style.transform = `translateX(${slideX})`;
     frontCard.style.opacity = '0';
     
     setTimeout(() => {
       state.widgetIndex += dir;
       renderUpcoming();
-    }, 350);
+    }, 300);
   } else {
     state.widgetIndex += dir;
     renderUpcoming();
