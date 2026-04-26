@@ -772,19 +772,24 @@ function renderUpcoming(){
   if (state.widgetIndex >= upcoming.length) state.widgetIndex = 0;
   if (state.widgetIndex < 0) state.widgetIndex = upcoming.length - 1;
 
-  let html = `<div class="relative w-full h-[140px] md:h-[150px]">`;
+  let html = `<div class="relative w-full h-[140px] md:h-[150px]" style="overflow:visible;">`;
   
+  // Render cards in reverse order so front card is last in DOM (on top)
+  const cardsToRender = [];
   upcoming.forEach((next, i) => {
     let wrapDiff = i - state.widgetIndex;
     if (wrapDiff < 0) wrapDiff += upcoming.length;
-    
-    if (wrapDiff > 2) return; // Show max 3 cards
-    
+    if (wrapDiff > 2) return;
+    cardsToRender.push({ next, i, wrapDiff });
+  });
+  cardsToRender.sort((a, b) => b.wrapDiff - a.wrapDiff); // back cards first in DOM
+  
+  cardsToRender.forEach(({ next, i, wrapDiff }) => {
     const zIndex = 30 - wrapDiff;
-    const scale = 1 - (wrapDiff * 0.05); 
-    const translateX = wrapDiff * 15; // 15px to the right
-    const translateY = wrapDiff * 10; // 10px down
-    const opacity = 1 - (wrapDiff * 0.25);
+    const scale = 1 - (wrapDiff * 0.04); 
+    const translateX = wrapDiff * 18;
+    const translateY = wrapDiff * 8;
+    const opacity = 1 - (wrapDiff * 0.3);
     
     const dateObj = new Date(next.interview_date);
     const isToday = dateObj.toDateString() === now.toDateString();
@@ -792,43 +797,42 @@ function renderUpcoming(){
     const isFront = wrapDiff === 0;
     
     html += `
-      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 ${isFront ? '' : 'pointer-events-none'}" 
-           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity};">
-        <div class="relative p-[1px] rounded-3xl bg-gradient-to-br from-amber-400/60 via-purple-500/30 to-transparent shadow-[0_0_20px_rgba(245,158,11,0.15)] h-full ${isFront ? 'cursor-pointer hover:shadow-[0_0_30px_rgba(245,158,11,0.25)]' : ''}" 
+      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 ${isFront ? '' : 'select-none pointer-events-none'}" 
+           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity}; transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease;">
+        <div class="relative p-[1px] rounded-3xl h-full ${isFront ? 'cursor-pointer' : ''}" 
+             style="background: linear-gradient(to bottom right, rgba(251,191,36,0.6), rgba(168,85,247,0.3), transparent); box-shadow: 0 0 20px rgba(245,158,11,0.15);"
              ${isFront ? `data-id="${next.id}"` : ''}>
           
           ${isFront ? `
-          <div class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+          <div class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4" style="z-index:5;">
             <span class="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-25"></span>
             <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-[#0a0a0f]"></span>
           </div>
           ` : ''}
 
-          ${isFront ? `
-          <div class="glass p-5 rounded-[23px] h-full flex flex-col justify-center relative" style="background: #0a0a0f;">
+          <div class="p-5 rounded-[23px] h-full flex flex-col justify-center relative" style="background: #0e0e18; border: 1px solid rgba(255,255,255,0.07);">
+            ${isFront ? `
             <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen aktiv' : 'Erinnerungen aktivieren'}"
                     class="absolute top-3 right-3 text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
               ${state.notifyEnabled ? '🔔' : '🔕'}
             </button>
+            ` : ''}
             <div class="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-3 flex items-center gap-2">
               <span>⚡ ${isToday ? 'Interview Heute!' : 'Geplantes Interview'}</span>
             </div>
             <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg text-white leading-tight flex-shrink-0">
+              <div class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center shadow-lg text-white leading-tight flex-shrink-0" style="background: linear-gradient(to bottom right, #fbbf24, #f97316);">
                 <div class="text-xl font-black">${dateObj.getDate()}</div>
                 <div class="text-[10px] uppercase font-bold">${dateObj.toLocaleString('de-DE',{month:'short'})}</div>
               </div>
               <div class="flex-1 min-w-0 pr-8">
                 <div class="text-white font-bold truncate text-lg mb-1">${esc(next.company)}</div>
                 <div class="text-gray-300 text-xs flex items-center gap-2">
-                  <span class="bg-white/10 px-2 py-0.5 rounded-md border border-white/5">🕒 ${timeStr} Uhr</span>
+                  <span style="background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">🕒 ${timeStr} Uhr</span>
                 </div>
               </div>
             </div>
           </div>
-          ` : `
-          <div class="rounded-[23px] h-full" style="background: #12121a;"></div>
-          `}
         </div>
       </div>
     `;
@@ -858,15 +862,16 @@ window.changeWidgetIndex = function(dir, event) {
   
   const frontCard = document.getElementById('widget-front-card');
   if (frontCard) {
-    const translateX = dir > 0 ? '-120%' : '120%';
-    const rotate = dir > 0 ? '-15deg' : '15deg';
-    frontCard.style.transform = `translate(${translateX}, -10%) rotate(${rotate})`;
+    // Slide out: card flies to left or right like a page flip
+    const slideX = dir > 0 ? '-110%' : '110%';
+    frontCard.style.transition = 'transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s ease';
+    frontCard.style.transform = `translateX(${slideX})`;
     frontCard.style.opacity = '0';
     
     setTimeout(() => {
       state.widgetIndex += dir;
       renderUpcoming();
-    }, 250);
+    }, 350);
   } else {
     state.widgetIndex += dir;
     renderUpcoming();
