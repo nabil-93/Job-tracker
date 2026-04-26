@@ -233,6 +233,7 @@
     </div>
     <select id="filterStatus" class="input max-w-[180px]"><option value="all">Alle Status</option></select>
     <select id="filterPlatform" class="input max-w-[200px]"><option value="">Alle Plattformen</option></select>
+    <select id="filterJobType" class="input max-w-[200px]"><option value="">Alle Job-Typen</option></select>
     <select id="sortBy" class="input max-w-[180px]">
       <option value="newest">Neueste zuerst</option>
       <option value="oldest">Älteste zuerst</option>
@@ -273,11 +274,13 @@
           <input id="f_company" class="input" placeholder="z. B. SAP SE" required /></label>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Ort</span>
           <input id="f_location" class="input" placeholder="z. B. Berlin / Remote" /></label>
         <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Plattform</span>
           <select id="f_platform" class="input"></select></label>
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Job-Typ</span>
+          <select id="f_jobType" class="input"></select></label>
         <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Beworben am</span>
           <input id="f_appliedAt" type="date" class="input" /></label>
       </div>
@@ -422,6 +425,7 @@ const PLATFORMS = [
   'Bundesagentur für Arbeit','Monster','Jobware','Honeypot',
   'Direkt (Website)','Empfehlung','Sonstige',
 ];
+const JOB_TYPES = ['Vollzeit', 'Teilzeit', 'Werkstudent', 'Praktikum', 'Ausbildung', 'Freelance', 'Sonstige'];
 const FILE_KIND_LABEL = { cv: 'Lebenslauf', motivation: 'Anschreiben', other: 'Datei' };
 const FILE_KIND_EMOJI = { cv: '📄', motivation: '✉️', other: '📎' };
 
@@ -431,6 +435,7 @@ const state = {
   search: '',
   filterStatus: 'all',
   filterPlatform: '',
+  filterJobType: '',
   filterStarred: false,
   sortBy: 'newest',
   view: 'list',
@@ -588,17 +593,18 @@ function filtered(){
   let arr = [...state.items];
   if (state.filterStatus !== 'all') arr = arr.filter(b => b.status === state.filterStatus);
   if (state.filterPlatform)         arr = arr.filter(b => b.platform === state.filterPlatform);
+  if (state.filterJobType)          arr = arr.filter(b => b.job_type === state.filterJobType);
   if (state.filterStarred)          arr = arr.filter(b => b.starred);
   if (state.search.trim()){
     const q = state.search.toLowerCase();
-    arr = arr.filter(b => [b.job_title,b.company,b.location,b.platform,b.requirements,b.notes,b.contact_person]
+    arr = arr.filter(b => [b.job_title,b.company,b.location,b.platform,b.job_type,b.requirements,b.notes,b.contact_person]
       .some(v => (v||'').toLowerCase().includes(q)));
   }
   switch(state.sortBy){
-    case 'oldest':  arr.sort((a,b)=> new Date(a.applied_at) - new Date(b.applied_at)); break;
+    case 'oldest':  arr.sort((a,b)=> new Date(a.applied_at||a.created_at).getTime() - new Date(b.applied_at||b.created_at).getTime() || new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break;
     case 'company': arr.sort((a,b)=> (a.company||'').localeCompare(b.company||'')); break;
     case 'status':  arr.sort((a,b)=> STATUS_KEYS.indexOf(a.status) - STATUS_KEYS.indexOf(b.status)); break;
-    default:        arr.sort((a,b)=> new Date(b.applied_at) - new Date(a.applied_at));
+    default:        arr.sort((a,b)=> new Date(b.applied_at||b.created_at).getTime() - new Date(a.applied_at||a.created_at).getTime() || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
   return arr;
 }
@@ -644,6 +650,7 @@ function cardHTML(b){
           ${reqShort ? `<div class="text-xs text-gray-500 mt-2 line-clamp-2">${esc(reqShort)}</div>` : ''}
           <div class="flex items-center gap-2 mt-3 flex-wrap">
             <span class="pill" style="--c:${s.color}">${s.emoji} ${s.label}</span>
+            ${b.job_type ? `<span class="chip" style="background:rgba(59,130,246,0.12); color:#93c5fd; border:1px solid rgba(59,130,246,0.2);">💼 ${esc(b.job_type)}</span>` : ''}
             ${b.platform ? `<span class="chip" style="background:rgba(255,255,255,0.05); color:#9ca3af; border:1px solid rgba(255,255,255,0.08);">🌐 ${esc(b.platform)}</span>` : ''}
             <span class="text-[11px] text-gray-500">📅 ${fmtDate(b.applied_at)} · ${daysAgo(b.applied_at)}</span>
             ${fileCount ? `<span class="chip" style="background:rgba(168,85,247,0.12); color:#c4b5fd;">📎 ${fileCount}</span>` : ''}
@@ -677,6 +684,7 @@ function renderKanban(){
             <div class="font-bold text-white truncate">${esc(b.job_title)}</div>
             <div class="text-xs text-gray-400 truncate">${esc(b.company)}</div>
             <div class="flex items-center gap-2 mt-2 flex-wrap">
+              ${b.job_type ? `<span class="chip" style="background:rgba(59,130,246,0.12); color:#93c5fd;">${esc(b.job_type)}</span>` : ''}
               ${b.platform ? `<span class="chip" style="background:rgba(255,255,255,0.06); color:#9ca3af;">${esc(b.platform)}</span>` : ''}
               <span class="text-[10px] text-gray-500">${daysAgo(b.applied_at)}</span>
               ${b.starred ? '<span class="star-on">★</span>' : ''}
@@ -926,6 +934,7 @@ function openModal(id=null){
     $('f_company').value = b.company || '';
     $('f_location').value = b.location || '';
     $('f_platform').value = b.platform || '';
+    $('f_jobType').value = b.job_type || '';
     $('f_appliedAt').value = (b.applied_at||'').slice(0,10);
     $('f_status').value = b.status;
     $('f_salary').value = b.salary || '';
@@ -1023,6 +1032,7 @@ async function saveBewerbung(e){
     company:        $('f_company').value.trim(),
     location:       $('f_location').value.trim(),
     platform:       $('f_platform').value,
+    job_type:       $('f_jobType').value,
     applied_at:     $('f_appliedAt').value || todayISO(),
     status:         $('f_status').value,
     salary:         $('f_salary').value.trim(),
@@ -1197,8 +1207,8 @@ async function toggleStar(id){
 }
 
 function resetFilters(){
-  state.search=''; state.filterStatus='all'; state.filterPlatform=''; state.filterStarred=false;
-  $('search').value=''; $('filterStatus').value='all'; $('filterPlatform').value=''; $('filterStarred').checked=false;
+  state.search=''; state.filterStatus='all'; state.filterPlatform=''; state.filterJobType=''; state.filterStarred=false;
+  $('search').value=''; $('filterStatus').value='all'; $('filterPlatform').value=''; $('filterJobType').value=''; $('filterStarred').checked=false;
   render();
 }
 
@@ -1422,11 +1432,16 @@ function populateSelects(){
   STATUS_KEYS.forEach(k => fStatus.insertAdjacentHTML('beforeend', `<option value="${k}">${STATUS[k].emoji} ${STATUS[k].label}</option>`));
   const fPlat = $('filterPlatform');
   PLATFORMS.forEach(p => fPlat.insertAdjacentHTML('beforeend', `<option>${p}</option>`));
+  const fType = $('filterJobType');
+  JOB_TYPES.forEach(t => fType.insertAdjacentHTML('beforeend', `<option>${t}</option>`));
   const fStat2 = $('f_status');
   STATUS_KEYS.forEach(k => fStat2.insertAdjacentHTML('beforeend', `<option value="${k}">${STATUS[k].emoji} ${STATUS[k].label}</option>`));
   const fPlat2 = $('f_platform');
   fPlat2.insertAdjacentHTML('beforeend', `<option value="">— wählen —</option>`);
   PLATFORMS.forEach(p => fPlat2.insertAdjacentHTML('beforeend', `<option>${p}</option>`));
+  const fType2 = $('f_jobType');
+  fType2.insertAdjacentHTML('beforeend', `<option value="">— wählen —</option>`);
+  JOB_TYPES.forEach(t => fType2.insertAdjacentHTML('beforeend', `<option>${t}</option>`));
 }
 
 function wire(){
@@ -1438,6 +1453,7 @@ function wire(){
   $('search').addEventListener('input', e => { state.search = e.target.value; render(); });
   $('filterStatus').addEventListener('change', e => { state.filterStatus = e.target.value; render(); });
   $('filterPlatform').addEventListener('change', e => { state.filterPlatform = e.target.value; render(); });
+  $('filterJobType').addEventListener('change', e => { state.filterJobType = e.target.value; render(); });
   $('filterStarred').addEventListener('change', e => { state.filterStarred = e.target.checked; render(); });
   $('sortBy').addEventListener('change', e => { state.sortBy = e.target.value; render(); });
   $('btnReset').addEventListener('click', resetFilters);
