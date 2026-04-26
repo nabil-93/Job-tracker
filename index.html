@@ -792,8 +792,8 @@ function renderUpcoming(){
     const isFront = wrapDiff === 0;
     
     html += `
-      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 transition-all duration-300 ease-in-out" 
-           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity};">
+      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 ${isFront ? '' : 'pointer-events-none'}" 
+           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity}; ${!isFront ? 'overflow:hidden; border-radius:1.5rem;' : ''}">
         <div class="relative p-[1px] rounded-3xl bg-gradient-to-br from-amber-400/60 via-purple-500/30 to-transparent shadow-[0_0_20px_rgba(245,158,11,0.15)] h-full ${isFront ? 'cursor-pointer hover:shadow-[0_0_30px_rgba(245,158,11,0.25)]' : ''}" 
              ${isFront ? `data-id="${next.id}"` : ''}>
           
