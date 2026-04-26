@@ -313,9 +313,9 @@
       <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Eigene Notizen</span>
         <textarea id="f_notes" class="input" placeholder="Was hast du angepasst? Worauf achten?"></textarea></label>
 
-      <label id="f_interviewNotes_container" class="block hidden">
-        <span class="text-xs text-amber-400 mb-1 block uppercase tracking-wider font-bold">🎤 Interview-Notizen</span>
-        <textarea id="f_interviewNotes" class="input" style="min-height: 120px;" placeholder="Wer war dabei? Welche Fragen? Eindrücke…"></textarea>
+      <label id="f_interviewNotes_container" class="block">
+        <span class="text-xs text-amber-400 mb-1 block uppercase tracking-wider font-bold">🎤 Interview-Notizen & Gespräche</span>
+        <textarea id="f_interviewNotes" class="input" style="min-height: 120px;" placeholder="Notizen aus dem Interview: Wer war dabei? Welche Fragen wurden gestellt? Deine Eindrücke? ..."></textarea>
       </label>
 
       <div id="filesSection" class="hidden">
@@ -977,7 +977,6 @@ function closeModal(){
 function toggleInterviewFields(status){
   const isInterview = status === 'interview';
   $('f_interviewDate_container').classList.toggle('hidden', !isInterview);
-  $('f_interviewNotes_container').classList.toggle('hidden', !isInterview);
   if (isInterview && !$('f_interviewDate').value){
     const t = new Date(); t.setDate(t.getDate()+1); t.setHours(10,0,0,0);
     $('f_interviewDate').value = t.toISOString().slice(0,16);
