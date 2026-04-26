@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Job Tracker — Meine Bewerbungen</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='20'%3E📨%3C/text%3E%3C/svg%3E" />
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="style.css">
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
   window.__createSupabaseClient = createClient;
@@ -453,6 +453,13 @@ const PLATFORMS = [
 const JOB_TYPES = ['Vollzeit', 'Teilzeit', 'Werkstudent', 'Praktikum', 'Ausbildung', 'Freelance', 'Sonstige'];
 const FILE_KIND_LABEL = { cv: 'Lebenslauf', motivation: 'Anschreiben', other: 'Datei' };
 const FILE_KIND_EMOJI = { cv: '📄', motivation: '✉️', other: '📎' };
+
+// -------- Debounce helper --------
+function debounce(fn, ms = 300) {
+  let t;
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+const debouncedRender = debounce(() => render(), 250);
 
 // -------- State --------
 const state = {
@@ -1483,7 +1490,7 @@ function wire(){
   });
 
   // Toolbar
-  $('search').addEventListener('input', e => { state.search = e.target.value; render(); });
+  $('search').addEventListener('input', e => { state.search = e.target.value; debouncedRender(); });
   $('filterStatus').addEventListener('change', e => { state.filterStatus = e.target.value; render(); });
   $('filterPlatform').addEventListener('change', e => { state.filterPlatform = e.target.value; render(); });
   $('filterJobType').addEventListener('change', e => { state.filterJobType = e.target.value; render(); });
