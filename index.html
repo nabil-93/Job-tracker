@@ -1,0 +1,1530 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Job Tracker — Meine Bewerbungen</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='20'%3E📨%3C/text%3E%3C/svg%3E" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+  window.__createSupabaseClient = createClient;
+</script>
+<style>
+  :root { color-scheme: dark; }
+  html, body { background: #0a0a0f; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif; }
+
+  .bg-mesh { position: fixed; inset: 0; overflow: hidden; z-index: -10; pointer-events: none; }
+  .bg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+  .blob { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: .55; mix-blend-mode: screen; animation: float 22s ease-in-out infinite; }
+  .blob.b1 { width: 520px; height: 520px; left: -120px; top: -120px; background: radial-gradient(circle, #a855f7, transparent 70%); }
+  .blob.b2 { width: 480px; height: 480px; right: -120px; top: 12%; background: radial-gradient(circle, #ec4899, transparent 70%); animation-delay: -7s; }
+  .blob.b3 { width: 460px; height: 460px; left: 30%; bottom: -160px; background: radial-gradient(circle, #f59e0b, transparent 70%); animation-delay: -14s; }
+  .blob.b4 { width: 380px; height: 380px; right: 18%; bottom: -120px; background: radial-gradient(circle, #06b6d4, transparent 70%); animation-delay: -3s; }
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%     { transform: translate(40px,-30px) scale(1.06); }
+    66%     { transform: translate(-30px,30px) scale(.95); }
+  }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55) 100%); }
+  .noise { position: absolute; inset: 0; opacity: .035; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+  .glass { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(8px); }
+  .glass-strong { background: rgba(15,15,22,0.78); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(20px); }
+  .grad-text { background: linear-gradient(135deg,#a855f7,#ec4899,#f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .grad-btn  { background: linear-gradient(135deg,#a855f7,#ec4899); box-shadow: 0 10px 30px rgba(168,85,247,.35); }
+  .grad-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 36px rgba(236,72,153,.45); }
+  .chip { padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .input { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 12px; color: #fff; font-size: 14px; outline: none; width: 100%; transition: border-color .15s, background .15s; }
+  .input:focus { border-color: rgba(168,85,247,.55); background: rgba(255,255,255,0.06); }
+  .input::placeholder { color: #6b7280; }
+  textarea.input { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .btn { padding: 9px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; transition: all .15s ease; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #d1d5db; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .btn-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+  .btn-danger:hover { background: rgba(239,68,68,0.18); color: #fff; }
+  .card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; transition: transform .18s, border-color .18s, background .18s; }
+  .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
+  .stat-card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
+  .pill[data-c] { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+
+  .timeline-line { position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.08); }
+  .timeline-dot { width: 24px; height: 24px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; box-shadow: 0 0 0 4px #0a0a0f; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+  .modal-bg { background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); }
+  .modal-enter { animation: modalIn .22s ease forwards; }
+  @keyframes modalIn { from { opacity:0; transform: translateY(8px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+  .fade-in { animation: fadeIn .25s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .kanban-col { min-height: 200px; min-width: 280px; }
+  .star-on { color: #f59e0b; filter: drop-shadow(0 0 6px rgba(245,158,11,.5)); }
+
+  /* ==== Auth screen ==== */
+  body[data-app="loading"] #appShell, body[data-app="loading"] #authScreen { display: none !important; }
+  body[data-app="out"] #appShell { display: none !important; }
+  body[data-app="in"]  #authScreen { display: none !important; }
+  #loadingScreen { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; }
+  body[data-app="loading"] #loadingScreen { display: flex; }
+  body:not([data-app="loading"]) #loadingScreen { display: none; }
+  .spinner { width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #a855f7; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #authScreen { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card {
+    background: rgba(15,15,22,0.82); border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px); border-radius: 22px; padding: 36px;
+    width: 100%; max-width: 440px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    animation: modalIn .3s ease forwards;
+  }
+
+  /* ==== Profile / Avatar ==== */
+  .avatar {
+    width: 36px; height: 36px; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; color: #fff;
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    box-shadow: 0 4px 14px rgba(168,85,247,.35); flex-shrink: 0;
+  }
+  .profile-menu {
+    position: absolute; right: 0; top: calc(100% + 8px); min-width: 260px;
+    background: rgba(15,15,22,0.95); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 8px; z-index: 50;
+    animation: modalIn .15s ease forwards;
+  }
+  .profile-menu button {
+    width: 100%; text-align: left; padding: 9px 12px; border-radius: 10px;
+    font-size: 13px; color: #d1d5db; display: flex; align-items: center; gap: 10px;
+  }
+  .profile-menu button:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .profile-menu .danger:hover { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .profile-menu hr { border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 6px 0; }
+
+  .badge-role { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 9999px; letter-spacing: .08em; text-transform: uppercase; }
+  .badge-admin { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+  .badge-user  { background: rgba(255,255,255,0.08); color: #9ca3af; }
+</style>
+</head>
+<body data-app="loading">
+
+<div class="bg-mesh">
+  <div class="bg-grid"></div>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  <div class="vignette"></div><div class="noise"></div>
+</div>
+
+<!-- ========= LOADING ========= -->
+<div id="loadingScreen"><div class="spinner"></div></div>
+
+<!-- ========= AUTH SCREEN ========= -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+           style="background: linear-gradient(135deg,#a855f7,#ec4899); box-shadow: 0 8px 22px rgba(168,85,247,.4);">📨</div>
+      <div>
+        <div class="text-white font-bold text-lg">Job Tracker</div>
+        <div class="text-[11px] uppercase tracking-widest text-gray-400" id="authSubtitle">Anmelden</div>
+      </div>
+    </div>
+
+    <!-- Setup (first run, no users yet) -->
+    <form id="setupForm" class="hidden space-y-4">
+      <div class="p-3 rounded-xl text-xs" style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.25); color: #c4b5fd;">
+        <strong>👋 Erstes Setup.</strong> Lege dein Admin-Konto an. Nur du kannst danach weitere Benutzer hinzufügen.
+      </div>
+      <label class="block">
+        <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">E-Mail</span>
+        <input id="setup_email" type="email" class="input" placeholder="du@example.com" required />
+      </label>
+      <label class="block">
+        <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Benutzername</span>
+        <input id="setup_username" class="input" placeholder="z. B. nabil" minlength="2" />
+      </label>
+      <label class="block">
+        <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Passwort</span>
+        <input id="setup_password" type="password" class="input" placeholder="min. 6 Zeichen" required minlength="6" />
+      </label>
+      <button type="submit" id="setupBtn" class="btn grad-btn text-white w-full justify-center">🔐 Admin-Konto erstellen</button>
+      <div id="setupError" class="hidden text-xs text-center text-red-400 font-semibold"></div>
+    </form>
+
+    <!-- Login -->
+    <form id="loginForm" class="hidden space-y-4">
+      <label class="block">
+        <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">E-Mail</span>
+        <input id="login_email" type="email" class="input" placeholder="du@example.com" autocomplete="username" required />
+      </label>
+      <label class="block">
+        <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Passwort</span>
+        <input id="login_password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required />
+      </label>
+      <button type="submit" id="loginBtn" class="btn grad-btn text-white w-full justify-center">🔓 Anmelden</button>
+      <div id="loginError" class="hidden text-xs text-center text-red-400 font-semibold"></div>
+    </form>
+
+    <div class="mt-6 pt-5 border-t border-white/10 text-[11px] text-gray-500 text-center leading-relaxed">
+      🔒 Auth, Datenbank und Dateien werden über Supabase verwaltet. Konten werden vom Admin angelegt.
+    </div>
+  </div>
+</div>
+
+<!-- ========= APP SHELL ========= -->
+<div id="appShell">
+
+<nav class="sticky top-0 z-30 glass-strong">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+           style="background: linear-gradient(135deg,#a855f7,#ec4899); box-shadow: 0 8px 22px rgba(168,85,247,.35);">📨</div>
+      <div class="leading-tight">
+        <div class="text-white font-bold tracking-tight">Job Tracker</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-400">Meine Bewerbungen</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 relative">
+      <button id="btnAdd" class="btn grad-btn text-white">＋ Neue Bewerbung</button>
+      <button id="profileBtn" class="flex items-center gap-2 ml-1 px-2 py-1 rounded-xl hover:bg-white/5 transition-all" title="Profil">
+        <div class="avatar" id="navAvatar">U</div>
+        <div class="hidden md:block text-left">
+          <div class="text-xs font-bold text-white leading-tight" id="navUsername">—</div>
+          <div class="text-[9px] uppercase tracking-widest text-gray-500" id="navRole">user</div>
+        </div>
+      </button>
+      <div id="profileMenu" class="profile-menu hidden">
+        <div class="px-3 py-2">
+          <div class="text-xs text-gray-500 uppercase tracking-widest">Angemeldet als</div>
+          <div class="text-white font-bold text-sm flex items-center gap-2 mt-1">
+            <span id="menuUsername">—</span>
+            <span id="menuRoleBadge" class="badge-role badge-user">user</span>
+          </div>
+          <div class="text-[11px] text-gray-500 mt-0.5" id="menuEmail">—</div>
+        </div>
+        <hr/>
+        <button id="menuAdmin" class="hidden">👥 Benutzer verwalten</button>
+        <button id="menuExport">⬇️ Meine Daten exportieren</button>
+        <button id="menuImport">⬆️ Aus JSON importieren</button>
+        <input id="importFile" type="file" accept="application/json" class="hidden" />
+        <hr/>
+        <button id="menuLogout" class="danger">🚪 Abmelden</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-6 py-10">
+
+  <header class="mb-10 fade-in flex flex-col lg:flex-row justify-between items-start gap-8">
+    <div>
+      <h1 class="text-5xl font-bold leading-tight">Deine Bewerbungen,</h1>
+      <h1 class="text-5xl font-bold italic grad-text leading-tight mb-5">an einem Ort.</h1>
+      <p class="text-gray-400 text-lg max-w-2xl">
+        Trage hier nur die Stellen ein, auf die du dich <strong class="text-white">manuell</strong> beworben hast.
+        Halte fest, was die Firma sucht, auf welcher Plattform du es gefunden hast, und ob du
+        <span class="text-amber-400">Interview</span>, <span class="text-emerald-400">Angebot</span> oder <span class="text-red-400">Absage</span> bekommen hast.
+      </p>
+    </div>
+    <div id="upcomingWidget" class="w-full lg:w-96 flex-shrink-0"></div>
+  </header>
+
+  <section id="stats" class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8"></section>
+
+  <section class="glass rounded-2xl p-4 mb-6 flex flex-wrap items-center gap-3">
+    <div class="flex-1 min-w-[220px] relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">🔎</span>
+      <input id="search" class="input pl-9" placeholder="Suche: Firma, Titel, Notizen, Anforderungen…" />
+    </div>
+    <select id="filterStatus" class="input max-w-[180px]"><option value="all">Alle Status</option></select>
+    <select id="filterPlatform" class="input max-w-[200px]"><option value="">Alle Plattformen</option></select>
+    <select id="sortBy" class="input max-w-[180px]">
+      <option value="newest">Neueste zuerst</option>
+      <option value="oldest">Älteste zuerst</option>
+      <option value="company">Nach Firma (A–Z)</option>
+      <option value="status">Nach Status</option>
+    </select>
+    <label class="btn btn-ghost cursor-pointer select-none">
+      <input id="filterStarred" type="checkbox" class="accent-amber-500" /> ⭐ Favoriten
+    </label>
+    <div class="flex gap-1 rounded-xl p-1" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <button data-view="list"   class="viewBtn btn btn-ghost text-xs">☰ Liste</button>
+      <button data-view="kanban" class="viewBtn btn btn-ghost text-xs">▦ Kanban</button>
+    </div>
+    <button id="btnReset" class="btn btn-ghost" title="Filter zurücksetzen">✕</button>
+  </section>
+
+  <section id="content"></section>
+
+</main>
+
+<!-- ========= ADD/EDIT MODAL ========= -->
+<div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-bg">
+  <div class="modal-enter glass-strong rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 glass-strong z-10">
+      <div>
+        <div class="text-xs uppercase tracking-widest text-gray-500" id="modalEyebrow">Neue Bewerbung</div>
+        <h2 class="text-xl font-bold text-white" id="modalTitle">Stelle erfassen</h2>
+      </div>
+      <button id="modalClose" class="btn btn-ghost">✕</button>
+    </div>
+    <form id="form" class="p-6 space-y-5">
+      <input type="hidden" id="f_id" />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Job-Titel *</span>
+          <input id="f_jobTitle" class="input" placeholder="z. B. Frontend Developer" required /></label>
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Firma *</span>
+          <input id="f_company" class="input" placeholder="z. B. SAP SE" required /></label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Ort</span>
+          <input id="f_location" class="input" placeholder="z. B. Berlin / Remote" /></label>
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Plattform</span>
+          <select id="f_platform" class="input"></select></label>
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Beworben am</span>
+          <input id="f_appliedAt" type="date" class="input" /></label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Status</span>
+          <select id="f_status" class="input"></select></label>
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Gehalt / Range</span>
+          <input id="f_salary" class="input" placeholder="z. B. 60–70k €" /></label>
+      </div>
+
+      <label id="f_interviewDate_container" class="block hidden p-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent">
+        <span class="text-xs text-amber-400 mb-1 block uppercase tracking-wider font-bold">🎤 Interview-Termin</span>
+        <input id="f_interviewDate" type="datetime-local" class="input border-amber-500/30" />
+      </label>
+
+      <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Job-URL</span>
+        <input id="f_jobUrl" type="url" class="input" placeholder="https://…" /></label>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Ansprechpartner</span>
+          <input id="f_contactPerson" class="input" placeholder="Max Mustermann" /></label>
+        <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">E-Mail</span>
+          <input id="f_contactEmail" type="email" class="input" placeholder="hr@firma.de" /></label>
+      </div>
+
+      <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Anforderungen / Was sucht die Firma?</span>
+        <textarea id="f_requirements" class="input" placeholder="z. B. 3+ Jahre React, TypeScript, Deutsch C1, Remote möglich…"></textarea></label>
+
+      <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Eigene Notizen</span>
+        <textarea id="f_notes" class="input" placeholder="Was hast du angepasst? Worauf achten?"></textarea></label>
+
+      <label id="f_interviewNotes_container" class="block hidden">
+        <span class="text-xs text-amber-400 mb-1 block uppercase tracking-wider font-bold">🎤 Interview-Notizen</span>
+        <textarea id="f_interviewNotes" class="input" style="min-height: 120px;" placeholder="Wer war dabei? Welche Fragen? Eindrücke…"></textarea>
+      </label>
+
+      <div id="filesSection" class="hidden">
+        <div class="text-xs text-gray-400 mb-2 uppercase tracking-wider">📎 Dokumente</div>
+        <div id="filesList" class="space-y-2 mb-3"></div>
+        <div class="flex gap-2 flex-wrap">
+          <button type="button" data-kind="cv"         class="btnAttach btn btn-ghost">＋ CV anhängen</button>
+          <button type="button" data-kind="motivation" class="btnAttach btn btn-ghost">＋ Anschreiben</button>
+          <button type="button" data-kind="other"      class="btnAttach btn btn-ghost">＋ Sonstige Datei</button>
+          <input id="fileInput" type="file" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" class="hidden" />
+        </div>
+      </div>
+
+      <div id="timelineSection" class="hidden">
+        <div class="text-xs text-gray-400 mb-3 uppercase tracking-wider">⏱ Verlauf</div>
+        <div id="timelineList" class="relative pl-8 space-y-3"></div>
+        <div class="flex gap-2 mt-3">
+          <input id="timelineNote" class="input" placeholder="Notiz hinzufügen…" />
+          <button type="button" id="btnAddNote" class="btn btn-ghost">+ Notiz</button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-white/10">
+        <button type="button" id="btnDelete" class="btn btn-danger hidden">🗑 Löschen</button>
+        <div class="flex gap-2 ml-auto">
+          <button type="button" id="btnCancel" class="btn btn-ghost">Abbrechen</button>
+          <button type="submit" id="saveBtn" class="btn grad-btn text-white">💾 Speichern</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========= ADMIN MODAL ========= -->
+<div id="adminModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-bg">
+  <div class="modal-enter glass-strong rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 glass-strong z-10">
+      <div>
+        <div class="text-xs uppercase tracking-widest text-amber-500">Admin-Bereich</div>
+        <h2 class="text-xl font-bold text-white">👥 Benutzer verwalten</h2>
+      </div>
+      <button id="adminClose" class="btn btn-ghost">✕</button>
+    </div>
+    <div class="p-6 space-y-6">
+      <!-- Add user -->
+      <div class="rounded-2xl p-5" style="background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.2);">
+        <div class="text-sm font-bold text-white mb-3">＋ Neuen Benutzer anlegen</div>
+        <form id="addUserForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input id="nu_email" type="email" class="input" placeholder="E-Mail" required />
+          <input id="nu_username" class="input" placeholder="Benutzername" />
+          <input id="nu_password" type="password" class="input" placeholder="Passwort (min. 6)" required minlength="6" />
+          <select id="nu_role" class="input">
+            <option value="user">Benutzer</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button type="submit" class="btn grad-btn text-white md:col-span-2 justify-center">Konto erstellen</button>
+        </form>
+        <div id="addUserError" class="hidden text-xs text-red-400 mt-2 font-semibold"></div>
+      </div>
+
+      <!-- Users list -->
+      <div>
+        <div class="text-sm font-bold text-white mb-3">Bestehende Benutzer</div>
+        <div id="usersList" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========= TOAST ========= -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 pointer-events-none"></div>
+
+</div><!-- /appShell -->
+
+<script type="module">
+/* =============================================================
+   Job Tracker — Supabase-powered SPA
+============================================================= */
+
+const SUPABASE_URL = 'https://wuiiyewinbewjdyxmcvw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1aWl5ZXdpbmJld2pkeXhtY3Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTA0ODcsImV4cCI6MjA5MDc4NjQ4N30.lCWvD-LyPB68q0-VUzew4KG8bwwARwlSuo_umQB1hnw';
+const STORAGE_BUCKET = 'jt-files';
+
+// Wait for the supabase-js dynamic import to finish (it sets window.__createSupabaseClient)
+async function waitForLib(){
+  while (!window.__createSupabaseClient) await new Promise(r => setTimeout(r, 30));
+}
+
+let sb;            // Supabase client
+let session = null;
+let profile = null; // { id, username, role }
+
+// -------- Constants --------
+const STATUS = {
+  beworben:       { label: 'Beworben',         color: '#8b5cf6', emoji: '📨' },
+  gesehen:        { label: 'Gesehen',          color: '#3b82f6', emoji: '👁️' },
+  antwort:        { label: 'Antwort erhalten', color: '#06b6d4', emoji: '💬' },
+  interview:      { label: 'Interview',        color: '#f59e0b', emoji: '🎤' },
+  aufgabe:        { label: 'Aufgabe / Test',   color: '#eab308', emoji: '📝' },
+  angebot:        { label: 'Angebot',          color: '#22c55e', emoji: '🎉' },
+  abgelehnt:      { label: 'Abgelehnt',        color: '#ef4444', emoji: '❌' },
+  zurueckgezogen: { label: 'Zurückgezogen',    color: '#9ca3af', emoji: '↩️' },
+};
+const STATUS_KEYS = Object.keys(STATUS);
+const PLATFORMS = [
+  'LinkedIn','Indeed','StepStone','Xing','Glassdoor',
+  'Bundesagentur für Arbeit','Monster','Jobware','Honeypot',
+  'Direkt (Website)','Empfehlung','Sonstige',
+];
+const FILE_KIND_LABEL = { cv: 'Lebenslauf', motivation: 'Anschreiben', other: 'Datei' };
+const FILE_KIND_EMOJI = { cv: '📄', motivation: '✉️', other: '📎' };
+
+// -------- State --------
+const state = {
+  items: [],            // bewerbungen with files+timeline merged in
+  search: '',
+  filterStatus: 'all',
+  filterPlatform: '',
+  filterStarred: false,
+  sortBy: 'newest',
+  view: 'list',
+  editingId: null,
+  widgetIndex: 0,
+  pendingFiles: [],     // File-Anhänge für eine NEUE (noch nicht gespeicherte) Bewerbung
+  notifyEnabled: localStorage.getItem('jt_notify') === '1',
+  notifiedKeys: new Set(JSON.parse(localStorage.getItem('jt_notified') || '[]')),
+};
+
+// -------- Helpers --------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = iso => { if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'}); };
+const fmtDT   = iso => { if(!iso) return '—'; const d=new Date(iso); return d.toLocaleString('de-DE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); };
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtBytes = b => !b ? '—' : b<1024 ? b+' B' : b<1024*1024 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(2)+' MB';
+const initials = s => (s||'?').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const daysAgo = iso => {
+  if(!iso) return '';
+  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (d <= 0) return 'heute';
+  if (d === 1) return 'gestern';
+  if (d < 30) return `vor ${d} Tagen`;
+  const m = Math.floor(d/30);
+  if (m < 12) return `vor ${m} Mon.`;
+  return `vor ${Math.floor(m/12)} J.`;
+};
+function toast(msg, kind='ok'){
+  const el = document.createElement('div');
+  const colors = {ok:'#22c55e', err:'#ef4444', info:'#a855f7'};
+  el.className = 'pointer-events-auto px-4 py-3 rounded-xl mb-2 text-sm font-semibold shadow-lg fade-in';
+  el.style.background = 'rgba(15,15,22,0.92)';
+  el.style.border = `1px solid ${colors[kind]}55`;
+  el.style.color = colors[kind];
+  el.style.backdropFilter = 'blur(12px)';
+  el.textContent = msg;
+  $('toast').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s, transform .3s'; el.style.opacity='0'; el.style.transform='translateY(8px)'; setTimeout(()=>el.remove(),300); }, 2600);
+}
+function showError(elId, msg){ const el = $(elId); el.textContent = msg; el.classList.remove('hidden'); }
+function clearError(elId){ $(elId).classList.add('hidden'); }
+
+// =============================================================
+// Boot / Auth
+// =============================================================
+async function boot(){
+  document.body.dataset.app = 'loading';
+  await waitForLib();
+  sb = window.__createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'jt-auth' },
+  });
+
+  populateSelects();
+  wire();
+
+  const { data } = await sb.auth.getSession();
+  session = data?.session || null;
+  if (session) await onSignedIn();
+  else await showAuthScreen();
+
+  sb.auth.onAuthStateChange((_e, s) => {
+    session = s;
+    if (s) onSignedIn();
+    else showAuthScreen();
+  });
+}
+
+async function showAuthScreen(){
+  document.body.dataset.app = 'out';
+  // Decide: setup or login? Check if any profile exists.
+  // Profiles are visible only to authed users; for setup detection we count via a public RPC.
+  // Simpler: try to sign in fails normally — but for first-run UX we offer setup if no profile in DB.
+  // We can't query profiles unauthenticated, so we infer: try fetch and if "No profiles" assume empty.
+  // Trick: the 'jt_setup_needed' status is only true when there are 0 users. We expose a public RPC.
+  // For now, attempt a public select — if it errors with permission, fall back to login screen.
+  let setupNeeded = false;
+  try {
+    const { data, error } = await sb.rpc('jt_setup_needed');
+    if (!error && data === true) setupNeeded = true;
+  } catch {}
+  if (setupNeeded){
+    $('setupForm').classList.remove('hidden'); $('loginForm').classList.add('hidden');
+    $('authSubtitle').textContent = 'Erstes Setup';
+  } else {
+    $('loginForm').classList.remove('hidden'); $('setupForm').classList.add('hidden');
+    $('authSubtitle').textContent = 'Anmelden';
+  }
+}
+
+async function onSignedIn(){
+  document.body.dataset.app = 'loading';
+  // fetch profile
+  const userId = session.user.id;
+  let { data: prof, error } = await sb.from('jt_profiles').select('*').eq('id', userId).maybeSingle();
+  if (error) { console.error(error); }
+  if (!prof){
+    // create on the fly (safety)
+    const username = session.user.user_metadata?.username || session.user.email.split('@')[0];
+    const { data: created } = await sb.from('jt_profiles').upsert({ id: userId, username, role: 'user' }).select().single();
+    prof = created;
+  }
+  profile = prof;
+
+  // Update navbar
+  $('navAvatar').textContent = initials(profile.username);
+  $('navUsername').textContent = profile.username;
+  $('navRole').textContent = profile.role;
+  $('menuUsername').textContent = profile.username;
+  $('menuEmail').textContent = session.user.email;
+  const badge = $('menuRoleBadge');
+  badge.textContent = profile.role;
+  badge.className = 'badge-role ' + (profile.role === 'admin' ? 'badge-admin' : 'badge-user');
+  $('menuAdmin').classList.toggle('hidden', profile.role !== 'admin');
+
+  await loadAll();
+  document.body.dataset.app = 'in';
+  render();
+  startReminderLoop();
+}
+
+// =============================================================
+// Data loading
+// =============================================================
+async function loadAll(){
+  // Load bewerbungen, files, timeline in parallel
+  const [b, f, t] = await Promise.all([
+    sb.from('jt_bewerbungen').select('*').eq('user_id', session.user.id).order('applied_at', { ascending: false }),
+    sb.from('jt_files').select('*').eq('user_id', session.user.id),
+    sb.from('jt_timeline').select('*').eq('user_id', session.user.id).order('event_at', { ascending: true }),
+  ]);
+  if (b.error){ toast('Laden fehlgeschlagen', 'err'); console.error(b.error); return; }
+
+  const filesByB = new Map();
+  (f.data || []).forEach(file => {
+    if (!filesByB.has(file.bewerbung_id)) filesByB.set(file.bewerbung_id, []);
+    filesByB.get(file.bewerbung_id).push(file);
+  });
+  const tlByB = new Map();
+  (t.data || []).forEach(ev => {
+    if (!tlByB.has(ev.bewerbung_id)) tlByB.set(ev.bewerbung_id, []);
+    tlByB.get(ev.bewerbung_id).push(ev);
+  });
+
+  state.items = (b.data || []).map(row => ({
+    ...row,
+    files: filesByB.get(row.id) || [],
+    timeline: tlByB.get(row.id) || [],
+  }));
+}
+
+// =============================================================
+// Filtering / sorting
+// =============================================================
+function filtered(){
+  let arr = [...state.items];
+  if (state.filterStatus !== 'all') arr = arr.filter(b => b.status === state.filterStatus);
+  if (state.filterPlatform)         arr = arr.filter(b => b.platform === state.filterPlatform);
+  if (state.filterStarred)          arr = arr.filter(b => b.starred);
+  if (state.search.trim()){
+    const q = state.search.toLowerCase();
+    arr = arr.filter(b => [b.job_title,b.company,b.location,b.platform,b.requirements,b.notes,b.contact_person]
+      .some(v => (v||'').toLowerCase().includes(q)));
+  }
+  switch(state.sortBy){
+    case 'oldest':  arr.sort((a,b)=> new Date(a.applied_at) - new Date(b.applied_at)); break;
+    case 'company': arr.sort((a,b)=> (a.company||'').localeCompare(b.company||'')); break;
+    case 'status':  arr.sort((a,b)=> STATUS_KEYS.indexOf(a.status) - STATUS_KEYS.indexOf(b.status)); break;
+    default:        arr.sort((a,b)=> new Date(b.applied_at) - new Date(a.applied_at));
+  }
+  return arr;
+}
+
+// =============================================================
+// Rendering
+// =============================================================
+function renderStats(){
+  const items = state.items;
+  const cells = [
+    { k:'all',       label:'Gesamt',     val: items.length,                                       grad:'linear-gradient(135deg,#a855f7,#ec4899)' },
+    { k:'beworben',  label:'Beworben',   val: items.filter(i=>i.status==='beworben').length,      grad:'linear-gradient(135deg,#8b5cf6,#6366f1)' },
+    { k:'antwort',   label:'Antwort',    val: items.filter(i=>i.status==='antwort').length, grad:'linear-gradient(135deg,#06b6d4,#3b82f6)' },
+    { k:'interview', label:'Interview',  val: items.filter(i=>['interview','aufgabe'].includes(i.status)).length, grad:'linear-gradient(135deg,#f59e0b,#eab308)' },
+    { k:'angebot',   label:'Angebote',   val: items.filter(i=>i.status==='angebot').length,       grad:'linear-gradient(135deg,#22c55e,#10b981)' },
+    { k:'abgelehnt', label:'Abgelehnt',  val: items.filter(i=>i.status==='abgelehnt').length,     grad:'linear-gradient(135deg,#ef4444,#f43f5e)' },
+  ];
+  $('stats').innerHTML = cells.map(c => `
+    <button data-stat="${c.k}" class="stat-card text-left p-4 hover:scale-[1.02] transition-transform">
+      <div class="text-3xl font-extrabold" style="background:${c.grad}; -webkit-background-clip:text; background-clip:text; color:transparent;">${c.val}</div>
+      <div class="text-[11px] uppercase tracking-widest text-gray-500 mt-1">${c.label}</div>
+    </button>
+  `).join('');
+}
+
+function cardHTML(b){
+  const s = STATUS[b.status] || STATUS.beworben;
+  const fileCount = b.files?.length || 0;
+  const reqShort = (b.requirements||'').split('\n').slice(0,2).join(' · ').slice(0,140);
+  return `
+    <div class="card p-5 cursor-pointer fade-in" data-id="${b.id}">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
+             style="background: linear-gradient(135deg, ${s.color}33, ${s.color}11); border: 1px solid ${s.color}33;">${s.emoji}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="font-bold text-white truncate">${esc(b.job_title)}</div>
+              <div class="text-sm text-gray-400 truncate">🏢 ${esc(b.company)} ${b.location ? `· 📍 ${esc(b.location)}` : ''}</div>
+            </div>
+            <button class="starBtn text-lg ${b.starred?'star-on':'text-gray-600 hover:text-amber-400'}" data-id="${b.id}" title="Favorit">${b.starred?'★':'☆'}</button>
+          </div>
+          ${reqShort ? `<div class="text-xs text-gray-500 mt-2 line-clamp-2">${esc(reqShort)}</div>` : ''}
+          <div class="flex items-center gap-2 mt-3 flex-wrap">
+            <span class="pill" style="--c:${s.color}">${s.emoji} ${s.label}</span>
+            ${b.platform ? `<span class="chip" style="background:rgba(255,255,255,0.05); color:#9ca3af; border:1px solid rgba(255,255,255,0.08);">🌐 ${esc(b.platform)}</span>` : ''}
+            <span class="text-[11px] text-gray-500">📅 ${fmtDate(b.applied_at)} · ${daysAgo(b.applied_at)}</span>
+            ${fileCount ? `<span class="chip" style="background:rgba(168,85,247,0.12); color:#c4b5fd;">📎 ${fileCount}</span>` : ''}
+            ${b.salary ? `<span class="chip" style="background:rgba(34,197,94,0.12); color:#86efac;">💰 ${esc(b.salary)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderList(){
+  const items = filtered();
+  if (!items.length) return renderEmpty();
+  $('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${items.map(cardHTML).join('')}</div>`;
+}
+
+function renderKanban(){
+  const items = filtered();
+  if (!items.length) return renderEmpty();
+  const cols = STATUS_KEYS.map(k => {
+    const list = items.filter(i => i.status === k);
+    const s = STATUS[k];
+    return `
+      <div class="kanban-col glass rounded-2xl p-4 flex-shrink-0" style="width: 320px;">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2"><span class="text-lg">${s.emoji}</span><span class="font-bold text-white text-sm">${s.label}</span></div>
+          <span class="chip" style="background:${s.color}22; color:${s.color};">${list.length}</span>
+        </div>
+        <div class="space-y-2">${list.map(b => `
+          <div class="card p-3 cursor-pointer text-sm" data-id="${b.id}">
+            <div class="font-bold text-white truncate">${esc(b.job_title)}</div>
+            <div class="text-xs text-gray-400 truncate">${esc(b.company)}</div>
+            <div class="flex items-center gap-2 mt-2 flex-wrap">
+              ${b.platform ? `<span class="chip" style="background:rgba(255,255,255,0.06); color:#9ca3af;">${esc(b.platform)}</span>` : ''}
+              <span class="text-[10px] text-gray-500">${daysAgo(b.applied_at)}</span>
+              ${b.starred ? '<span class="star-on">★</span>' : ''}
+            </div>
+          </div>`).join('') || `<div class="text-xs text-gray-600 italic px-2">Leer</div>`}
+        </div>
+      </div>`;
+  }).join('');
+  $('content').innerHTML = `<div class="flex gap-4 overflow-x-auto pb-4">${cols}</div>`;
+}
+
+function renderEmpty(){
+  $('content').innerHTML = `
+    <div class="glass rounded-2xl p-16 text-center fade-in">
+      <div class="text-6xl mb-4">📭</div>
+      <h3 class="text-xl font-bold text-white mb-2">${state.items.length===0?'Noch keine Bewerbung erfasst':'Keine Treffer'}</h3>
+      <p class="text-gray-400 mb-6">${state.items.length===0
+        ? 'Klicke oben rechts auf <strong class="text-white">＋ Neue Bewerbung</strong>.'
+        : 'Setze die Filter zurück.'}</p>
+      ${state.items.length===0
+        ? `<button onclick="window.openModal()" class="btn grad-btn text-white">＋ Erste Bewerbung anlegen</button>`
+        : `<button onclick="window.resetFilters()" class="btn btn-ghost">Filter zurücksetzen</button>`}
+    </div>`;
+}
+
+function renderUpcoming(){
+  const widget = $('upcomingWidget');
+  const now = new Date();
+  const upcoming = state.items
+    .filter(b => b.status === 'interview' && b.interview_date)
+    .filter(b => new Date(b.interview_date).getTime() > now.getTime() - 86400000)
+    .sort((a,b) => new Date(a.interview_date) - new Date(b.interview_date));
+
+  if (!upcoming.length){
+    widget.innerHTML = `
+      <div class="glass rounded-2xl p-4 flex items-center justify-between opacity-70">
+        <div class="text-xs text-gray-400">Kein Interview geplant</div>
+        <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen aktiv' : 'Erinnerungen aktivieren'}"
+                class="text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
+          ${state.notifyEnabled ? '🔔' : '🔕'}
+        </button>
+      </div>`;
+    return;
+  }
+
+  if (state.widgetIndex >= upcoming.length) state.widgetIndex = 0;
+  if (state.widgetIndex < 0) state.widgetIndex = upcoming.length - 1;
+  const next = upcoming[state.widgetIndex];
+
+  const dt = new Date(next.interview_date);
+  const isToday = dt.toDateString() === now.toDateString();
+  const tmrw = new Date(now); tmrw.setDate(tmrw.getDate()+1);
+  const isTomorrow = dt.toDateString() === tmrw.toDateString();
+  const dayLabel = isToday ? 'HEUTE' : isTomorrow ? 'MORGEN' : dt.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'short'}).toUpperCase();
+  const timeLabel = dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+
+  let html = `
+    <div class="glass rounded-2xl p-5 cursor-pointer fade-in" data-id="${next.id}"
+         style="background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.06)); border: 1px solid rgba(245,158,11,0.3);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-[10px] uppercase tracking-widest font-bold" style="color:#f59e0b;">🎤 Nächstes Interview</div>
+        <div class="flex items-center gap-2">
+          ${upcoming.length>1 ? `<span class="text-[10px] text-amber-500/80">${state.widgetIndex+1}/${upcoming.length}</span>` : ''}
+          <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen sind aktiv — klicken zum Deaktivieren' : 'Browser-Erinnerung aktivieren'}"
+                  class="text-[14px] leading-none px-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
+            ${state.notifyEnabled ? '🔔' : '🔕'}
+          </button>
+        </div>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1">${esc(next.company)}</div>
+      <div class="text-sm text-gray-300 mb-3 truncate">${esc(next.job_title)}</div>
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-xs uppercase tracking-widest text-amber-400 font-bold">${dayLabel}</div>
+          <div class="text-3xl font-extrabold text-white">${timeLabel}</div>
+        </div>
+        ${upcoming.length>1 ? `
+          <div class="flex gap-2">
+            <button class="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 text-white" data-widget-nav="-1">⬅</button>
+            <button class="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 text-white" data-widget-nav="1">➡</button>
+          </div>` : ''}
+      </div>
+    </div>`;
+  widget.innerHTML = html;
+}
+
+// -------- Termin-Erinnerungen (Browser-Notifications) --------
+async function toggleNotifications(){
+  if (state.notifyEnabled){
+    state.notifyEnabled = false;
+    localStorage.setItem('jt_notify', '0');
+    toast('Erinnerungen deaktiviert', 'info');
+    renderUpcoming();
+    return;
+  }
+  if (!('Notification' in window)){
+    toast('Browser unterstützt keine Benachrichtigungen', 'err'); return;
+  }
+  let perm = Notification.permission;
+  if (perm === 'default') perm = await Notification.requestPermission();
+  if (perm !== 'granted'){
+    toast('Berechtigung verweigert — bitte im Browser erlauben', 'err'); return;
+  }
+  state.notifyEnabled = true;
+  localStorage.setItem('jt_notify', '1');
+  toast('Erinnerungen aktiviert ✓');
+  renderUpcoming();
+  checkInterviewReminders();
+}
+function persistNotifiedKeys(){
+  localStorage.setItem('jt_notified', JSON.stringify([...state.notifiedKeys]));
+}
+function checkInterviewReminders(){
+  if (!state.notifyEnabled) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = Date.now();
+  // Schwellen: 1 Tag, 1 Stunde, 15 Minuten vorher
+  const thresholds = [
+    { mins: 24*60, label: 'morgen' },
+    { mins: 60,    label: 'in 1 Stunde' },
+    { mins: 15,    label: 'in 15 Minuten' },
+  ];
+  let dirty = false;
+  for (const b of state.items){
+    if (b.status !== 'interview' || !b.interview_date) continue;
+    const t = new Date(b.interview_date).getTime();
+    const diffMin = Math.round((t - now) / 60000);
+    if (diffMin < -5) continue; // vorbei
+    for (const th of thresholds){
+      // Fenster: zwischen th.mins-1 und th.mins (wir prüfen jede Minute)
+      if (diffMin <= th.mins && diffMin > th.mins - 2){
+        const key = `${b.id}_${th.mins}`;
+        if (state.notifiedKeys.has(key)) continue;
+        try {
+          new Notification(`🎤 Interview ${th.label}: ${b.company}`, {
+            body: `${b.job_title || 'Bewerbung'} · ${new Date(b.interview_date).toLocaleString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr`,
+            tag: key,
+          });
+        } catch(_) {}
+        state.notifiedKeys.add(key);
+        dirty = true;
+      }
+    }
+  }
+  if (dirty) persistNotifiedKeys();
+}
+let __reminderTimer = null;
+function startReminderLoop(){
+  if (__reminderTimer) return;
+  checkInterviewReminders();
+  __reminderTimer = setInterval(checkInterviewReminders, 60*1000);
+}
+
+function render(){
+  renderStats();
+  renderUpcoming();
+  state.view === 'kanban' ? renderKanban() : renderList();
+  document.querySelectorAll('.viewBtn').forEach(b => {
+    const active = b.dataset.view === state.view;
+    b.style.background = active ? 'rgba(168,85,247,0.18)' : 'transparent';
+    b.style.color = active ? '#fff' : '#d1d5db';
+    b.style.borderColor = active ? 'rgba(168,85,247,0.4)' : 'transparent';
+  });
+}
+
+// =============================================================
+// Modal (add/edit)
+// =============================================================
+function openModal(id=null){
+  state.editingId = id;
+  const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex');
+  if (id){
+    const b = state.items.find(x => x.id === id);
+    if (!b) return closeModal();
+    $('modalEyebrow').textContent = `Bearbeiten · ${b.company || '—'}`;
+    $('modalTitle').textContent = b.job_title || 'Bewerbung';
+    $('f_id').value = b.id;
+    $('f_jobTitle').value = b.job_title || '';
+    $('f_company').value = b.company || '';
+    $('f_location').value = b.location || '';
+    $('f_platform').value = b.platform || '';
+    $('f_appliedAt').value = (b.applied_at||'').slice(0,10);
+    $('f_status').value = b.status;
+    $('f_salary').value = b.salary || '';
+    $('f_jobUrl').value = b.job_url || '';
+    $('f_contactPerson').value = b.contact_person || '';
+    $('f_contactEmail').value = b.contact_email || '';
+    $('f_requirements').value = b.requirements || '';
+    $('f_notes').value = b.notes || '';
+    $('f_interviewDate').value = b.interview_date ? new Date(b.interview_date).toISOString().slice(0,16) : '';
+    $('f_interviewNotes').value = b.interview_notes || '';
+    toggleInterviewFields(b.status);
+    $('filesSection').classList.remove('hidden');
+    $('timelineSection').classList.remove('hidden');
+    $('btnDelete').classList.remove('hidden');
+    renderFiles(b);
+    renderTimeline(b);
+  } else {
+    const tempId = 'new_' + crypto.randomUUID();
+    state.editingId = tempId;
+    state.pendingFiles = [];
+    $('modalEyebrow').textContent = 'Neue Bewerbung';
+    $('modalTitle').textContent = 'Stelle erfassen';
+    $('form').reset();
+    $('f_id').value = tempId;
+    $('f_appliedAt').value = todayISO();
+    $('f_status').value = 'beworben';
+    toggleInterviewFields('beworben');
+    $('filesSection').classList.remove('hidden');
+    $('timelineSection').classList.add('hidden');
+    $('btnDelete').classList.add('hidden');
+    renderFiles({ files: [] });
+  }
+  setTimeout(()=>$('f_jobTitle').focus(), 100);
+}
+function closeModal(){
+  state.editingId = null;
+  state.pendingFiles = [];
+  const m = $('modal'); m.classList.add('hidden'); m.classList.remove('flex');
+}
+function toggleInterviewFields(status){
+  const isInterview = status === 'interview';
+  $('f_interviewDate_container').classList.toggle('hidden', !isInterview);
+  $('f_interviewNotes_container').classList.toggle('hidden', !isInterview);
+  if (isInterview && !$('f_interviewDate').value){
+    const t = new Date(); t.setDate(t.getDate()+1); t.setHours(10,0,0,0);
+    $('f_interviewDate').value = t.toISOString().slice(0,16);
+  }
+}
+
+function renderFiles(b){
+  const list = $('filesList');
+  if (!b.files || !b.files.length){ list.innerHTML = `<div class="text-xs text-gray-500 italic">Noch keine Datei.</div>`; return; }
+  list.innerHTML = b.files.map(f => {
+    const pending = !!f._pendingId;
+    return `
+    <div class="flex items-center gap-3 p-3 rounded-xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="text-xl">${FILE_KIND_EMOJI[f.kind]||'📎'}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-bold text-white truncate">${esc(f.name)} ${pending ? '<span class="text-[10px] text-amber-400 ml-1">· wartet auf Speichern</span>' : ''}</div>
+        <div class="text-[11px] text-gray-500">${FILE_KIND_LABEL[f.kind]||'Datei'} · ${fmtBytes(f.size)} · ${fmtDate(f.uploaded_at)}</div>
+      </div>
+      ${pending ? '' : `<button type="button" data-dl="${f.id}" data-path="${esc(f.storage_path)}" data-name="${esc(f.name)}" class="btn btn-ghost text-xs">⬇</button>`}
+      <button type="button" data-rm="${pending ? f._pendingId : f.id}" data-pending="${pending ? '1' : ''}" data-path="${esc(f.storage_path||'')}" class="btn btn-danger text-xs">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function renderTimeline(b){
+  const list = $('timelineList');
+  const events = [...(b.timeline||[])].reverse();
+  if (!events.length){ list.innerHTML = `<div class="text-xs text-gray-500 italic pl-2">Keine Einträge.</div>`; return; }
+  list.innerHTML = `<div class="timeline-line"></div>` + events.map(e => {
+    const s = e.status ? STATUS[e.status] : null;
+    const color = s ? s.color : '#a855f7';
+    const emoji = s ? s.emoji : '📝';
+    return `
+      <div class="flex items-start gap-3 relative">
+        <div class="timeline-dot" style="background: ${color}33; border: 2px solid ${color};">${emoji}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm text-white">${s ? `<strong>${s.label}</strong>` : ''}${e.note ? (s?' — ':'') + esc(e.note) : ''}</div>
+          <div class="text-[11px] text-gray-500">${fmtDT(e.event_at)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// =============================================================
+// CRUD
+// =============================================================
+async function saveBewerbung(e){
+  e.preventDefault();
+  const id = $('f_id').value;
+  const data = {
+    job_title:      $('f_jobTitle').value.trim(),
+    company:        $('f_company').value.trim(),
+    location:       $('f_location').value.trim(),
+    platform:       $('f_platform').value,
+    applied_at:     $('f_appliedAt').value || todayISO(),
+    status:         $('f_status').value,
+    salary:         $('f_salary').value.trim(),
+    job_url:        $('f_jobUrl').value.trim(),
+    contact_person: $('f_contactPerson').value.trim(),
+    contact_email:  $('f_contactEmail').value.trim(),
+    requirements:   $('f_requirements').value,
+    notes:          $('f_notes').value,
+    interview_date: $('f_interviewDate').value ? new Date($('f_interviewDate').value).toISOString() : null,
+    interview_notes:$('f_interviewNotes').value,
+  };
+  if (!data.job_title || !data.company){ toast('Job-Titel und Firma sind erforderlich', 'err'); return; }
+  const isNew = !id || id.startsWith('new_');
+  $('saveBtn').disabled = true;
+  try {
+    if (!isNew){
+      const prev = state.items.find(x => x.id === id);
+      const statusChanged = prev && prev.status !== data.status;
+      const { error } = await sb.from('jt_bewerbungen').update(data).eq('id', id);
+      if (error) throw error;
+      if (statusChanged){
+        await sb.from('jt_timeline').insert({
+          bewerbung_id: id, user_id: session.user.id,
+          event_type: 'status', status: data.status, note: 'Status geändert'
+        });
+      }
+      toast('Aktualisiert ✓');
+    } else {
+      const { data: ins, error } = await sb.from('jt_bewerbungen').insert({ ...data, user_id: session.user.id }).select().single();
+      if (error) throw error;
+
+      // Während der Erstellung angehängte Dateien jetzt hochladen
+      await uploadPendingFiles(ins.id);
+
+      await sb.from('jt_timeline').insert({
+        bewerbung_id: ins.id, user_id: session.user.id,
+        event_type: 'status', status: data.status, note: 'Bewerbung erstellt'
+      });
+      toast('Bewerbung hinzugefügt ✓');
+    }
+    closeModal();
+    await loadAll();
+    render();
+  } catch (err){
+    toast('Fehler: ' + err.message, 'err');
+  } finally {
+    $('saveBtn').disabled = false;
+  }
+}
+
+async function deleteCurrent(){
+  const id = $('f_id').value;
+  if (!id) return;
+  if (!confirm('Diese Bewerbung wirklich löschen? Alle Dateien und Verlauf werden ebenfalls entfernt.')) return;
+  try {
+    // remove storage files
+    const b = state.items.find(x => x.id === id);
+    if (b?.files?.length){
+      const paths = b.files.map(f => f.storage_path);
+      await sb.storage.from(STORAGE_BUCKET).remove(paths);
+    }
+    // cascade deletes timeline+files via FK
+    const { error } = await sb.from('jt_bewerbungen').delete().eq('id', id);
+    if (error) throw error;
+    closeModal();
+    await loadAll();
+    render();
+    toast('Gelöscht', 'info');
+  } catch (err){ toast('Fehler: ' + err.message, 'err'); }
+}
+
+async function attachFile(file, kind){
+  const id = state.editingId; if (!id) return;
+  if (file.size > 25 * 1024 * 1024){ toast('Datei zu groß (max. 25 MB)', 'err'); return; }
+
+  // Neue Bewerbung: Datei zwischenspeichern, Upload erst nach dem Speichern
+  if (id.startsWith('new_')){
+    const pending = {
+      _pendingId: 'p_' + crypto.randomUUID(),
+      file, kind,
+      name: file.name, size: file.size, mime: file.type,
+      uploaded_at: new Date().toISOString(),
+    };
+    state.pendingFiles.push(pending);
+    renderFiles({ files: state.pendingFiles });
+    toast(`${FILE_KIND_LABEL[kind]} bereit · wird beim Speichern hochgeladen`, 'info');
+    return;
+  }
+
+  try {
+    const safeName = file.name.replace(/[^\w.\-() ]+/g, '_');
+    const path = `${session.user.id}/${id}/${crypto.randomUUID()}_${safeName}`;
+    const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: false, contentType: file.type });
+    if (upErr) throw upErr;
+    const { data: meta, error } = await sb.from('jt_files').insert({
+      bewerbung_id: id, user_id: session.user.id,
+      storage_path: path, name: file.name, mime: file.type, size: file.size, kind,
+    }).select().single();
+    if (error) throw error;
+    const b = state.items.find(x => x.id === id);
+    b.files = [...(b.files||[]), meta];
+    renderFiles(b); render();
+    toast(`${FILE_KIND_LABEL[kind]} angehängt ✓`);
+  } catch (err){ toast('Upload fehlgeschlagen: ' + err.message, 'err'); }
+}
+
+async function uploadPendingFiles(bewerbungId){
+  if (!state.pendingFiles.length) return;
+  for (const p of state.pendingFiles){
+    try {
+      const safeName = p.name.replace(/[^\w.\-() ]+/g, '_');
+      const path = `${session.user.id}/${bewerbungId}/${crypto.randomUUID()}_${safeName}`;
+      const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(path, p.file, { upsert: false, contentType: p.mime });
+      if (upErr) throw upErr;
+      const { error } = await sb.from('jt_files').insert({
+        bewerbung_id: bewerbungId, user_id: session.user.id,
+        storage_path: path, name: p.name, mime: p.mime, size: p.size, kind: p.kind,
+      });
+      if (error) throw error;
+    } catch (err){
+      toast(`Upload "${p.name}" fehlgeschlagen: ${err.message}`, 'err');
+    }
+  }
+  state.pendingFiles = [];
+}
+
+async function downloadFile(fileId, path, name){
+  try {
+    const { data, error } = await sb.storage.from(STORAGE_BUCKET).download(path);
+    if (error) throw error;
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  } catch (err){ toast('Download fehlgeschlagen: ' + err.message, 'err'); }
+}
+
+async function removeFile(fileId, path){
+  if (!confirm('Datei wirklich löschen?')) return;
+  try {
+    await sb.storage.from(STORAGE_BUCKET).remove([path]);
+    const { error } = await sb.from('jt_files').delete().eq('id', fileId);
+    if (error) throw error;
+    const b = state.items.find(x => x.id === state.editingId);
+    if (b){ b.files = b.files.filter(f => f.id !== fileId); renderFiles(b); render(); }
+    toast('Datei entfernt', 'info');
+  } catch (err){ toast('Fehler: ' + err.message, 'err'); }
+}
+
+async function addTimelineNote(){
+  const inp = $('timelineNote');
+  const note = inp.value.trim(); if (!note) return;
+  try {
+    const { data, error } = await sb.from('jt_timeline').insert({
+      bewerbung_id: state.editingId, user_id: session.user.id,
+      event_type: 'note', note,
+    }).select().single();
+    if (error) throw error;
+    const b = state.items.find(x => x.id === state.editingId);
+    b.timeline = [...(b.timeline||[]), data];
+    inp.value = '';
+    renderTimeline(b);
+  } catch (err){ toast('Fehler: ' + err.message, 'err'); }
+}
+
+async function toggleStar(id){
+  const b = state.items.find(x => x.id === id); if (!b) return;
+  const newVal = !b.starred;
+  b.starred = newVal;
+  render();
+  await sb.from('jt_bewerbungen').update({ starred: newVal }).eq('id', id);
+}
+
+function resetFilters(){
+  state.search=''; state.filterStatus='all'; state.filterPlatform=''; state.filterStarred=false;
+  $('search').value=''; $('filterStatus').value='all'; $('filterPlatform').value=''; $('filterStarred').checked=false;
+  render();
+}
+
+async function exportMyData(){
+  toast('Export wird vorbereitet…', 'info');
+  // Download every file blob and base64-encode it inline so the JSON is a complete backup.
+  const items = [];
+  for (const b of state.items){
+    const filesOut = [];
+    for (const f of (b.files || [])){
+      try {
+        const { data: blob, error } = await sb.storage.from(STORAGE_BUCKET).download(f.storage_path);
+        if (error || !blob) throw error || new Error('no blob');
+        const base64 = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result).split(',')[1] || '');
+          r.onerror = () => reject(r.error);
+          r.readAsDataURL(blob);
+        });
+        filesOut.push({ name: f.name, mime: f.mime, size: f.size, kind: f.kind, uploaded_at: f.uploaded_at, content_base64: base64 });
+      } catch {
+        filesOut.push({ name: f.name, mime: f.mime, size: f.size, kind: f.kind, uploaded_at: f.uploaded_at, content_base64: null, missing: true });
+      }
+    }
+    items.push({
+      job_title: b.job_title, company: b.company, location: b.location, platform: b.platform,
+      job_url: b.job_url, applied_at: b.applied_at, status: b.status, salary: b.salary,
+      contact_person: b.contact_person, contact_email: b.contact_email, requirements: b.requirements,
+      notes: b.notes, starred: b.starred, interview_date: b.interview_date, interview_notes: b.interview_notes,
+      created_at: b.created_at, updated_at: b.updated_at,
+      timeline: (b.timeline || []).map(t => ({ event_at: t.event_at, event_type: t.event_type, status: t.status, note: t.note })),
+      files: filesOut,
+    });
+  }
+  const payload = { version: 2, exportedAt: new Date().toISOString(), profile: { username: profile.username }, items };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `bewerbungen-${profile.username}-${todayISO()}.json`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  toast(`Export bereit ✓ (${state.items.length} Einträge)`);
+}
+
+async function importMyData(file){
+  let parsed;
+  try { parsed = JSON.parse(await file.text()); }
+  catch { toast('Ungültige JSON-Datei', 'err'); return; }
+  const items = Array.isArray(parsed) ? parsed : (parsed.items || []);
+  if (!Array.isArray(items) || !items.length){ toast('Keine Einträge gefunden', 'err'); return; }
+  if (!confirm(`${items.length} Bewerbungen importieren? Sie werden zu deinem Konto hinzugefügt (Duplikate per Titel+Firma werden übersprungen).`)) return;
+
+  toast('Import läuft…', 'info');
+  const existingKeys = new Set(state.items.map(b => `${(b.job_title||'').toLowerCase()}::${(b.company||'').toLowerCase()}`));
+  let imported = 0, skipped = 0, fileFailures = 0;
+
+  for (const it of items){
+    const key = `${(it.job_title||'').toLowerCase()}::${(it.company||'').toLowerCase()}`;
+    if (existingKeys.has(key)){ skipped++; continue; }
+    try {
+      const insertData = {
+        user_id: session.user.id,
+        job_title: it.job_title || 'Ohne Titel',
+        company: it.company || '',
+        location: it.location || '',
+        platform: it.platform || '',
+        job_url: it.job_url || '',
+        applied_at: it.applied_at || todayISO(),
+        status: STATUS_KEYS.includes(it.status) ? it.status : 'beworben',
+        salary: it.salary || '',
+        contact_person: it.contact_person || '',
+        contact_email: it.contact_email || '',
+        requirements: it.requirements || '',
+        notes: it.notes || '',
+        starred: !!it.starred,
+        interview_date: it.interview_date || null,
+        interview_notes: it.interview_notes || '',
+      };
+      const { data: ins, error } = await sb.from('jt_bewerbungen').insert(insertData).select().single();
+      if (error) throw error;
+      const newId = ins.id;
+
+      // Timeline
+      const tl = (it.timeline || []).map(t => ({
+        bewerbung_id: newId, user_id: session.user.id,
+        event_at: t.event_at || new Date().toISOString(),
+        event_type: t.event_type === 'status' ? 'status' : 'note',
+        status: t.status || null, note: t.note || '',
+      }));
+      if (tl.length) await sb.from('jt_timeline').insert(tl);
+
+      // Files
+      for (const f of (it.files || [])){
+        if (!f.content_base64){ fileFailures++; continue; }
+        try {
+          const bin = Uint8Array.from(atob(f.content_base64), c => c.charCodeAt(0));
+          const blob = new Blob([bin], { type: f.mime || 'application/octet-stream' });
+          const safeName = (f.name || 'file').replace(/[^\w.\-() ]+/g, '_');
+          const path = `${session.user.id}/${newId}/${crypto.randomUUID()}_${safeName}`;
+          const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(path, blob, { upsert: false, contentType: f.mime });
+          if (upErr) throw upErr;
+          await sb.from('jt_files').insert({
+            bewerbung_id: newId, user_id: session.user.id,
+            storage_path: path, name: f.name || safeName, mime: f.mime || '', size: f.size || blob.size,
+            kind: ['cv','motivation','other'].includes(f.kind) ? f.kind : 'other',
+          });
+        } catch { fileFailures++; }
+      }
+      imported++;
+    } catch (err){
+      console.error('Import error for item', it, err);
+    }
+  }
+  await loadAll();
+  render();
+  toast(`✓ ${imported} importiert${skipped?` · ${skipped} übersprungen`:''}${fileFailures?` · ${fileFailures} Datei(en) fehlgeschlagen`:''}`);
+}
+
+// =============================================================
+// Admin panel
+// =============================================================
+async function callAdmin(action, body={}){
+  const { data: { session: s } } = await sb.auth.getSession();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/jt-admin`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${s.access_token}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action, ...body }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || 'admin call failed');
+  return json;
+}
+
+async function openAdmin(){
+  $('adminModal').classList.remove('hidden'); $('adminModal').classList.add('flex');
+  await refreshUsers();
+}
+function closeAdmin(){ $('adminModal').classList.add('hidden'); $('adminModal').classList.remove('flex'); }
+
+async function refreshUsers(){
+  $('usersList').innerHTML = `<div class="text-sm text-gray-500 italic">Lade Benutzer…</div>`;
+  try {
+    const { users } = await callAdmin('list_users');
+    if (!users.length){ $('usersList').innerHTML = `<div class="text-sm text-gray-500 italic">Keine Benutzer.</div>`; return; }
+    $('usersList').innerHTML = users.map(u => `
+      <div class="flex items-center gap-3 p-3 rounded-xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+        <div class="avatar">${initials(u.username)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-white truncate">${esc(u.username)}</span>
+            <span class="badge-role ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role}</span>
+          </div>
+          <div class="text-[11px] text-gray-500 truncate">${esc(u.email)}${u.last_sign_in_at ? ' · zuletzt ' + fmtDT(u.last_sign_in_at) : ' · nie angemeldet'}</div>
+        </div>
+        <div class="flex items-center gap-1">
+          <button data-act="role" data-id="${u.id}" data-role="${u.role==='admin'?'user':'admin'}" class="btn btn-ghost text-xs" title="Rolle ändern">${u.role==='admin'?'↓ User':'↑ Admin'}</button>
+          <button data-act="reset" data-id="${u.id}" class="btn btn-ghost text-xs" title="Passwort zurücksetzen">🔑</button>
+          <button data-act="delete" data-id="${u.id}" data-name="${esc(u.username)}" class="btn btn-danger text-xs" title="Löschen">🗑</button>
+        </div>
+      </div>`).join('');
+  } catch (err){
+    $('usersList').innerHTML = `<div class="text-sm text-red-400">Fehler: ${esc(err.message)}</div>`;
+  }
+}
+
+// =============================================================
+// Setup / Login / Logout
+// =============================================================
+async function handleSetup(e){
+  e.preventDefault(); clearError('setupError');
+  const email = $('setup_email').value.trim();
+  const username = $('setup_username').value.trim() || email.split('@')[0];
+  const password = $('setup_password').value;
+  $('setupBtn').disabled = true;
+  try {
+    const { error } = await sb.auth.signUp({ email, password, options: { data: { username } } });
+    if (error) throw error;
+    // The DB trigger creates the profile + grants admin to first user.
+    toast('Admin-Konto erstellt ✓');
+    // signUp may auto-sign-in; if not, do it explicitly
+    const { data: { session: s } } = await sb.auth.getSession();
+    if (!s){
+      const { error: e2 } = await sb.auth.signInWithPassword({ email, password });
+      if (e2) throw e2;
+    }
+  } catch (err){
+    showError('setupError', err.message);
+  } finally {
+    $('setupBtn').disabled = false;
+  }
+}
+
+async function handleLogin(e){
+  e.preventDefault(); clearError('loginError');
+  const email = $('login_email').value.trim();
+  const password = $('login_password').value;
+  $('loginBtn').disabled = true;
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  } catch (err){
+    showError('loginError', err.message);
+  } finally {
+    $('loginBtn').disabled = false;
+  }
+}
+
+async function handleLogout(){
+  await sb.auth.signOut();
+  state.items = []; profile = null;
+  toast('Abgemeldet', 'info');
+}
+
+// =============================================================
+// Wiring
+// =============================================================
+function populateSelects(){
+  const fStatus = $('filterStatus');
+  STATUS_KEYS.forEach(k => fStatus.insertAdjacentHTML('beforeend', `<option value="${k}">${STATUS[k].emoji} ${STATUS[k].label}</option>`));
+  const fPlat = $('filterPlatform');
+  PLATFORMS.forEach(p => fPlat.insertAdjacentHTML('beforeend', `<option>${p}</option>`));
+  const fStat2 = $('f_status');
+  STATUS_KEYS.forEach(k => fStat2.insertAdjacentHTML('beforeend', `<option value="${k}">${STATUS[k].emoji} ${STATUS[k].label}</option>`));
+  const fPlat2 = $('f_platform');
+  fPlat2.insertAdjacentHTML('beforeend', `<option value="">— wählen —</option>`);
+  PLATFORMS.forEach(p => fPlat2.insertAdjacentHTML('beforeend', `<option>${p}</option>`));
+}
+
+function wire(){
+  // Auth forms
+  $('setupForm').addEventListener('submit', handleSetup);
+  $('loginForm').addEventListener('submit', handleLogin);
+
+  // Toolbar
+  $('search').addEventListener('input', e => { state.search = e.target.value; render(); });
+  $('filterStatus').addEventListener('change', e => { state.filterStatus = e.target.value; render(); });
+  $('filterPlatform').addEventListener('change', e => { state.filterPlatform = e.target.value; render(); });
+  $('filterStarred').addEventListener('change', e => { state.filterStarred = e.target.checked; render(); });
+  $('sortBy').addEventListener('change', e => { state.sortBy = e.target.value; render(); });
+  $('btnReset').addEventListener('click', resetFilters);
+  document.querySelectorAll('.viewBtn').forEach(b => b.addEventListener('click', () => { state.view = b.dataset.view; render(); }));
+
+  $('stats').addEventListener('click', e => {
+    const b = e.target.closest('button[data-stat]'); if (!b) return;
+    state.filterStatus = b.dataset.stat === 'all' ? 'all' : b.dataset.stat;
+    $('filterStatus').value = state.filterStatus;
+    render();
+  });
+
+  // Add bewerbung
+  $('btnAdd').addEventListener('click', () => openModal());
+
+  // Profile menu
+  $('profileBtn').addEventListener('click', e => { e.stopPropagation(); $('profileMenu').classList.toggle('hidden'); });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#profileBtn') && !e.target.closest('#profileMenu')) $('profileMenu').classList.add('hidden');
+  });
+  $('menuLogout').addEventListener('click', () => { $('profileMenu').classList.add('hidden'); handleLogout(); });
+  $('menuExport').addEventListener('click', () => { $('profileMenu').classList.add('hidden'); exportMyData(); });
+  $('menuImport').addEventListener('click', () => { $('profileMenu').classList.add('hidden'); $('importFile').click(); });
+  $('importFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    await importMyData(f); e.target.value = '';
+  });
+  $('menuAdmin').addEventListener('click', () => { $('profileMenu').classList.add('hidden'); openAdmin(); });
+
+  // Modal
+  $('modalClose').addEventListener('click', closeModal);
+  $('btnCancel').addEventListener('click', closeModal);
+  $('form').addEventListener('submit', saveBewerbung);
+  $('btnDelete').addEventListener('click', deleteCurrent);
+  $('btnAddNote').addEventListener('click', addTimelineNote);
+  $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape'){
+      if (!$('modal').classList.contains('hidden')) closeModal();
+      else if (!$('adminModal').classList.contains('hidden')) closeAdmin();
+    }
+  });
+  $('f_status').addEventListener('change', e => toggleInterviewFields(e.target.value));
+
+  // Files
+  let pendingKind = 'other';
+  document.querySelectorAll('.btnAttach').forEach(btn => btn.addEventListener('click', () => {
+    pendingKind = btn.dataset.kind; $('fileInput').click();
+  }));
+  $('fileInput').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    await attachFile(f, pendingKind);
+    e.target.value = '';
+  });
+
+  $('content').addEventListener('click', e => {
+    const widgetNav = e.target.closest('button[data-widget-nav]');
+    if (widgetNav){ e.stopPropagation(); state.widgetIndex += +widgetNav.dataset.widgetNav; renderUpcoming(); return; }
+    const star = e.target.closest('.starBtn');
+    if (star){ e.stopPropagation(); toggleStar(star.dataset.id); return; }
+    const card = e.target.closest('[data-id]');
+    if (card){ openModal(card.dataset.id); }
+  });
+
+  $('upcomingWidget').addEventListener('click', e => {
+    const notifyBtn = e.target.closest('button[data-notify-toggle]');
+    if (notifyBtn){ e.stopPropagation(); toggleNotifications(); return; }
+    const widgetNav = e.target.closest('button[data-widget-nav]');
+    if (widgetNav){ e.stopPropagation(); state.widgetIndex += +widgetNav.dataset.widgetNav; renderUpcoming(); return; }
+    const card = e.target.closest('[data-id]');
+    if (card) openModal(card.dataset.id);
+  });
+
+  $('filesList').addEventListener('click', e => {
+    const dl = e.target.closest('button[data-dl]');
+    if (dl){ downloadFile(dl.dataset.dl, dl.dataset.path, dl.dataset.name); return; }
+    const rm = e.target.closest('button[data-rm]');
+    if (rm){
+      if (rm.dataset.pending === '1'){
+        state.pendingFiles = state.pendingFiles.filter(p => p._pendingId !== rm.dataset.rm);
+        renderFiles({ files: state.pendingFiles });
+      } else {
+        removeFile(rm.dataset.rm, rm.dataset.path);
+      }
+    }
+  });
+
+  // Admin
+  $('adminClose').addEventListener('click', closeAdmin);
+  $('adminModal').addEventListener('click', e => { if (e.target.id === 'adminModal') closeAdmin(); });
+  $('addUserForm').addEventListener('submit', async e => {
+    e.preventDefault(); clearError('addUserError');
+    const email = $('nu_email').value.trim();
+    const username = $('nu_username').value.trim();
+    const password = $('nu_password').value;
+    const role = $('nu_role').value;
+    try {
+      await callAdmin('create_user', { email, password, username, role });
+      $('addUserForm').reset();
+      await refreshUsers();
+      toast('Benutzer erstellt ✓');
+    } catch (err){ showError('addUserError', err.message); }
+  });
+  $('usersList').addEventListener('click', async e => {
+    const btn = e.target.closest('button[data-act]'); if (!btn) return;
+    const act = btn.dataset.act, id = btn.dataset.id;
+    try {
+      if (act === 'delete'){
+        const name = btn.dataset.name;
+        if (!confirm(`Benutzer "${name}" wirklich löschen? Alle Daten gehen verloren.`)) return;
+        await callAdmin('delete_user', { user_id: id });
+        toast('Benutzer gelöscht', 'info');
+      } else if (act === 'role'){
+        const newRole = btn.dataset.role;
+        await callAdmin('set_role', { user_id: id, role: newRole });
+        toast('Rolle aktualisiert ✓');
+      } else if (act === 'reset'){
+        const pwd = prompt('Neues Passwort (min. 6 Zeichen):');
+        if (!pwd) return;
+        await callAdmin('reset_password', { user_id: id, password: pwd });
+        toast('Passwort gesetzt ✓');
+      }
+      await refreshUsers();
+    } catch (err){ toast('Fehler: ' + err.message, 'err'); }
+  });
+}
+
+// expose for inline handlers
+window.openModal = openModal;
+window.resetFilters = resetFilters;
+
+// Boot
+boot();
+</script>
+</body>
+</html>

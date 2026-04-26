@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "exportedAt": "2026-04-26T18:15:00Z",
+  "items": [
+    {
+      "id": "b_mercedes_2026",
+      "jobTitle": "Ferienjob in der Produktion Werk Düsseldorf Sommer 2026",
+      "company": "Mercedes-Benz Group AG",
+      "location": "Düsseldorf",
+      "platform": "Indeed",
+      "appliedAt": "2026-04-26",
+      "status": "beworben",
+      "salary": "",
+      "jobUrl": "https://de.indeed.com/viewjob?jk=ae96ccb367c433d7",
+      "contactPerson": "",
+      "contactEmail": "",
+      "requirements": "Aufgaben: Unterstützung der Produktionsprozesse (z. B. Montage, Logistik oder Qualitätssicherung).\nArbeitszeit: 35 Std./Woche, Schichtarbeit (Früh-/Spätschicht im wöchentlichen Wechsel).\nDauer: 3-wöchiger Einsatz im Zeitraum vom 13.07.2026 bis zum 01.08.2026.\nAnforderungen: Schüler oder Studenten (bzw. Übergangszeit), mind. 18 Jahre alt, gute Deutschkenntnisse, Verfügbarkeit für mind. 3 zusammenhängende Wochen.",
+      "notes": "Automatisch über Antigravity Agent hinzugefügt.",
+      "starred": false,
+      "files": [],
+      "timeline": [
+        {
+          "id": "tl_init",
+          "date": "2026-04-26T18:15:00Z",
+          "type": "status",
+          "status": "beworben",
+          "note": "Bewerbung erstellt (Scraped from Indeed)"
+        }
+      ],
+      "createdAt": "2026-04-26T18:15:00Z",
+      "updatedAt": "2026-04-26T18:15:00Z"
+    }
+  ]
+}
