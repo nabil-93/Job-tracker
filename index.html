@@ -724,63 +724,131 @@ function renderEmpty(){
 
 function renderUpcoming(){
   const widget = $('upcomingWidget');
+  if (!widget) return;
   const now = new Date();
-  const upcoming = state.items
-    .filter(b => b.status === 'interview' && b.interview_date)
-    .filter(b => new Date(b.interview_date).getTime() > now.getTime() - 86400000)
-    .sort((a,b) => new Date(a.interview_date) - new Date(b.interview_date));
-
-  if (!upcoming.length){
+  
+  const upcoming = state.items.filter(b => b.status === 'interview' && b.interview_date)
+    .sort((a,b) => new Date(a.interview_date) - new Date(b.interview_date))
+    .filter(b => new Date(b.interview_date).getTime() > now.getTime() - (24 * 60 * 60 * 1000));
+  
+  if (upcoming.length === 0) {
     widget.innerHTML = `
-      <div class="glass rounded-2xl p-4 flex items-center justify-between opacity-70">
-        <div class="text-xs text-gray-400">Kein Interview geplant</div>
+      <div class="glass p-5 rounded-3xl border border-white/5 opacity-50 flex items-center gap-4 h-full relative">
         <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen aktiv' : 'Erinnerungen aktivieren'}"
-                class="text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
+                class="absolute top-3 right-3 text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
           ${state.notifyEnabled ? '🔔' : '🔕'}
         </button>
-      </div>`;
+        <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-2xl grayscale">☕</div>
+        <div>
+          <div class="text-sm font-bold text-gray-400">Keine anstehenden Interviews</div>
+          <div class="text-xs text-gray-600 mt-1">Zeit, sich weiter zu bewerben!</div>
+        </div>
+      </div>
+    `;
     return;
   }
-
+  
+  if (typeof state.widgetIndex !== 'number') state.widgetIndex = 0;
   if (state.widgetIndex >= upcoming.length) state.widgetIndex = 0;
   if (state.widgetIndex < 0) state.widgetIndex = upcoming.length - 1;
-  const next = upcoming[state.widgetIndex];
 
-  const dt = new Date(next.interview_date);
-  const isToday = dt.toDateString() === now.toDateString();
-  const tmrw = new Date(now); tmrw.setDate(tmrw.getDate()+1);
-  const isTomorrow = dt.toDateString() === tmrw.toDateString();
-  const dayLabel = isToday ? 'HEUTE' : isTomorrow ? 'MORGEN' : dt.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'short'}).toUpperCase();
-  const timeLabel = dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  let html = `<div class="relative w-full h-[140px] md:h-[150px]">`;
+  
+  upcoming.forEach((next, i) => {
+    let wrapDiff = i - state.widgetIndex;
+    if (wrapDiff < 0) wrapDiff += upcoming.length;
+    
+    if (wrapDiff > 2) return; // Show max 3 cards
+    
+    const zIndex = 30 - wrapDiff;
+    const scale = 1 - (wrapDiff * 0.05); 
+    const translateX = wrapDiff * 15; // 15px to the right
+    const translateY = wrapDiff * 10; // 10px down
+    const opacity = 1 - (wrapDiff * 0.25);
+    
+    const dateObj = new Date(next.interview_date);
+    const isToday = dateObj.toDateString() === now.toDateString();
+    const timeStr = dateObj.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+    const isFront = wrapDiff === 0;
+    
+    html += `
+      <div ${isFront ? 'id="widget-front-card"' : ''} class="absolute inset-0 transition-all duration-300 ease-in-out" 
+           style="z-index: ${zIndex}; transform: translate(${translateX}px, ${translateY}px) scale(${scale}); opacity: ${opacity};">
+        <div class="relative p-[1px] rounded-3xl bg-gradient-to-br from-amber-400/60 via-purple-500/30 to-transparent shadow-[0_0_20px_rgba(245,158,11,0.15)] h-full ${isFront ? 'cursor-pointer hover:shadow-[0_0_30px_rgba(245,158,11,0.25)]' : ''}" 
+             ${isFront ? `data-id="${next.id}"` : ''}>
+          
+          ${isFront ? `
+          <div class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-[#0a0a0f]"></span>
+          </div>
+          ` : ''}
 
-  let html = `
-    <div class="glass rounded-2xl p-5 cursor-pointer fade-in" data-id="${next.id}"
-         style="background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.06)); border: 1px solid rgba(245,158,11,0.3);">
-      <div class="flex items-center justify-between mb-3">
-        <div class="text-[10px] uppercase tracking-widest font-bold" style="color:#f59e0b;">🎤 Nächstes Interview</div>
-        <div class="flex items-center gap-2">
-          ${upcoming.length>1 ? `<span class="text-[10px] text-amber-500/80">${state.widgetIndex+1}/${upcoming.length}</span>` : ''}
-          <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen sind aktiv — klicken zum Deaktivieren' : 'Browser-Erinnerung aktivieren'}"
-                  class="text-[14px] leading-none px-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
-            ${state.notifyEnabled ? '🔔' : '🔕'}
-          </button>
+          <div class="glass p-5 rounded-[23px] h-full flex flex-col justify-center bg-[#0a0a0f]/80 relative">
+            ${isFront ? `
+            <button type="button" data-notify-toggle title="${state.notifyEnabled ? 'Erinnerungen aktiv' : 'Erinnerungen aktivieren'}"
+                    class="absolute top-3 right-3 text-[14px] leading-none px-2 py-1 rounded hover:bg-white/10 ${state.notifyEnabled ? 'text-amber-300' : 'text-gray-500'}">
+              ${state.notifyEnabled ? '🔔' : '🔕'}
+            </button>
+            ` : ''}
+            <div class="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-3 flex items-center gap-2">
+              <span>⚡ ${isToday ? 'Interview Heute!' : 'Geplantes Interview'}</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg text-white leading-tight flex-shrink-0">
+                <div class="text-xl font-black">${dateObj.getDate()}</div>
+                <div class="text-[10px] uppercase font-bold">${dateObj.toLocaleString('de-DE',{month:'short'})}</div>
+              </div>
+              <div class="flex-1 min-w-0 pr-8">
+                <div class="text-white font-bold truncate text-lg mb-1">${esc(next.company)}</div>
+                <div class="text-gray-300 text-xs flex items-center gap-2">
+                  <span class="bg-white/10 px-2 py-0.5 rounded-md border border-white/5">🕒 ${timeStr} Uhr</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="text-2xl font-bold text-white mb-1">${esc(next.company)}</div>
-      <div class="text-sm text-gray-300 mb-3 truncate">${esc(next.job_title)}</div>
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-xs uppercase tracking-widest text-amber-400 font-bold">${dayLabel}</div>
-          <div class="text-3xl font-extrabold text-white">${timeLabel}</div>
+    `;
+  });
+  
+  html += `</div>`;
+  
+  if (upcoming.length > 1) {
+    html += `
+      <div class="flex items-center justify-between mt-8 md:mt-5 px-2 fade-in">
+        <div class="text-xs uppercase tracking-widest text-amber-500/70 font-bold">
+          ${state.widgetIndex + 1} VON ${upcoming.length}
         </div>
-        ${upcoming.length>1 ? `
-          <div class="flex gap-2">
-            <button class="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 text-white" data-widget-nav="-1">⬅</button>
-            <button class="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 text-white" data-widget-nav="1">➡</button>
-          </div>` : ''}
+        <div class="flex gap-2">
+          <button class="w-9 h-9 rounded-full glass border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-amber-500/50 transition-all text-white shadow-lg" data-widget-nav="-1">⬅️</button>
+          <button class="w-9 h-9 rounded-full glass border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-amber-500/50 transition-all text-white shadow-lg" data-widget-nav="1">➡️</button>
+        </div>
       </div>
-    </div>`;
+    `;
+  }
+  
   widget.innerHTML = html;
+}
+
+window.changeWidgetIndex = function(dir, event) {
+  if (event) event.stopPropagation();
+  
+  const frontCard = document.getElementById('widget-front-card');
+  if (frontCard) {
+    const translateX = dir > 0 ? '-120%' : '120%';
+    const rotate = dir > 0 ? '-15deg' : '15deg';
+    frontCard.style.transform = `translate(${translateX}, -10%) rotate(${rotate})`;
+    frontCard.style.opacity = '0';
+    
+    setTimeout(() => {
+      state.widgetIndex += dir;
+      renderUpcoming();
+    }, 250);
+  } else {
+    state.widgetIndex += dir;
+    renderUpcoming();
+  }
 }
 
 // -------- Termin-Erinnerungen (Browser-Notifications) --------
@@ -1458,7 +1526,7 @@ function wire(){
     const notifyBtn = e.target.closest('button[data-notify-toggle]');
     if (notifyBtn){ e.stopPropagation(); toggleNotifications(); return; }
     const widgetNav = e.target.closest('button[data-widget-nav]');
-    if (widgetNav){ e.stopPropagation(); state.widgetIndex += +widgetNav.dataset.widgetNav; renderUpcoming(); return; }
+    if (widgetNav){ e.stopPropagation(); if(window.changeWidgetIndex) window.changeWidgetIndex(+widgetNav.dataset.widgetNav, e); else { state.widgetIndex += +widgetNav.dataset.widgetNav; renderUpcoming(); } return; }
     const card = e.target.closest('[data-id]');
     if (card) openModal(card.dataset.id);
   });
