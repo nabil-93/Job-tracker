@@ -20,14 +20,43 @@
     color: #e5e7eb;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
   }
-  
-  html.light, .light body { background: #f3f4f6 !important; color: #1f2937 !important; color-scheme: light !important; }
+  html.light, html.light body { background: #f3f4f6 !important; color: #1f2937 !important; color-scheme: light !important; }
+  /* Text colors */
   .light .text-white { color: #111827 !important; }
+  .light .text-gray-300 { color: #374151 !important; }
   .light .text-gray-400 { color: #4b5563 !important; }
   .light .text-gray-500 { color: #6b7280 !important; }
   .light .text-gray-600 { color: #9ca3af !important; }
-  .light .border-white\/10 { border-color: rgba(0,0,0,0.1) !important; }
-  .light .bg-white\/5 { background: rgba(0,0,0,0.05) !important; }
+  /* Borders */
+  .light .border-white\/10, .light .border-white\/5 { border-color: rgba(0,0,0,0.08) !important; }
+  /* Backgrounds */
+  .light .bg-white\/5, .light .bg-white\/10 { background: rgba(0,0,0,0.04) !important; }
+  /* Select / dropdown */
+  .light select.input { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 12px center; color: #111827; }
+  /* Nav & toolbar */
+  .light .glass-strong { background: #ffffff !important; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  /* Profile menu buttons in light mode */
+  .light .profile-menu button { color: #374151 !important; }
+  .light .profile-menu button:hover { background: #f3f4f6 !important; color: #111827 !important; }
+  .light .profile-menu .danger:hover { background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; }
+  /* Timeline dot shadow */
+  .light .timeline-dot { box-shadow: 0 0 0 4px #f3f4f6 !important; }
+  .light .timeline-line { background: rgba(0,0,0,0.08) !important; }
+  /* Scrollbar */
+  .light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12) !important; }
+  .light ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2) !important; }
+  /* Star button */
+  .light .text-gray-600 { color: #9ca3af !important; }
+  /* Kanban column borders */
+  .light .kanban-col { border-color: #e5e7eb !important; }
+  /* Chip backgrounds in light mode — override inline rgba(255,255,255,...) */
+  .light .chip { border-color: rgba(0,0,0,0.1) !important; }
+  /* View toggle buttons */
+  .light .viewBtn { color: #374151 !important; }
+  /* Fix stat card text */
+  .light .stat-card .text-6xl, .light .stat-card .text-3xl { color: #111827 !important; }
+  /* Fix modal glass-strong in light */
+  .light .modal-enter.glass-strong { background: #ffffff !important; border-color: #e5e7eb !important; }
 
   .glass { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); }
   .light .glass { background: #ffffff; border-color: #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -59,6 +88,15 @@
   .stat-card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
   .light .stat-card { background: linear-gradient(180deg, #ffffff, #f8fafc); border-color: #e5e7eb; }
   .pill[data-c] { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+  
+  .chip-blue { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+  .light .chip-blue { background: rgba(59,130,246,0.1); color: #2563eb; border-color: rgba(59,130,246,0.2); }
+  .chip-gray { background: rgba(255,255,255,0.05); color: #9ca3af; border: 1px solid rgba(255,255,255,0.08); }
+  .light .chip-gray { background: rgba(0,0,0,0.05); color: #4b5563; border-color: rgba(0,0,0,0.1); }
+  .chip-purple { background: rgba(168,85,247,0.12); color: #c4b5fd; border: 1px solid rgba(168,85,247,0.2); }
+  .light .chip-purple { background: rgba(168,85,247,0.1); color: #7c3aed; border-color: rgba(168,85,247,0.2); }
+  .chip-green { background: rgba(34,197,94,0.12); color: #86efac; border: 1px solid rgba(34,197,94,0.2); }
+  .light .chip-green { background: rgba(34,197,94,0.1); color: #059669; border-color: rgba(34,197,94,0.2); }
 
   .timeline-line { position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.08); }
   .timeline-dot { width: 24px; height: 24px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; box-shadow: 0 0 0 4px #0a0a0f; }
@@ -682,11 +720,11 @@ function cardHTML(b){
           ${reqShort ? `<div class="text-xs text-gray-500 mt-2 line-clamp-2">${esc(reqShort)}</div>` : ''}
           <div class="flex items-center gap-2 mt-3 flex-wrap">
             <span class="pill" style="--c:${s.color}">${s.emoji} ${s.label}</span>
-            ${b.job_type ? `<span class="chip" style="background:rgba(59,130,246,0.12); color:#93c5fd; border:1px solid rgba(59,130,246,0.2);">💼 ${esc(b.job_type)}</span>` : ''}
-            ${b.platform ? `<span class="chip" style="background:rgba(255,255,255,0.05); color:#9ca3af; border:1px solid rgba(255,255,255,0.08);">🌐 ${esc(b.platform)}</span>` : ''}
+            ${b.job_type ? `<span class="chip chip-blue">💼 ${esc(b.job_type)}</span>` : ''}
+            ${b.platform ? `<span class="chip chip-gray">🌐 ${esc(b.platform)}</span>` : ''}
             <span class="text-[11px] text-gray-500">📅 ${fmtDate(b.applied_at)} · ${daysAgo(b.applied_at)}</span>
-            ${fileCount ? `<span class="chip" style="background:rgba(168,85,247,0.12); color:#c4b5fd;">📎 ${fileCount}</span>` : ''}
-            ${b.salary ? `<span class="chip" style="background:rgba(34,197,94,0.12); color:#86efac;">💰 ${esc(b.salary)}</span>` : ''}
+            ${fileCount ? `<span class="chip chip-purple">📄 ${fileCount}</span>` : ''}
+            ${b.salary ? `<span class="chip chip-green">💰 ${esc(b.salary)}</span>` : ''}
           </div>
         </div>
       </div>
@@ -944,8 +982,9 @@ function render(){
   state.view === 'kanban' ? renderKanban() : renderList();
   document.querySelectorAll('.viewBtn').forEach(b => {
     const active = b.dataset.view === state.view;
+    const isLight = document.documentElement.classList.contains('light');
     b.style.background = active ? 'rgba(168,85,247,0.18)' : 'transparent';
-    b.style.color = active ? '#fff' : '#d1d5db';
+    b.style.color = active ? (isLight ? '#7c3aed' : '#fff') : (isLight ? '#4b5563' : '#d1d5db');
     b.style.borderColor = active ? 'rgba(168,85,247,0.4)' : 'transparent';
   });
 }
