@@ -10,18 +10,29 @@
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
   window.__createSupabaseClient = createClient;
 </script>
+<script>
+  if (localStorage.getItem('jt_theme') === 'light') { document.documentElement.classList.add('light'); }
+</script>
 <style>
   :root { color-scheme: dark; }
   html, body {
-    background: #0a0a0f radial-gradient(ellipse at top, #1f1f33 0%, #0a0a0f 60%);
-    background-attachment: fixed;
+    background: #0a0a0f;
     color: #e5e7eb;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
   }
-  /* bg-mesh and blobs removed for extreme performance */
+  
+  html.light, body.light { background: #f3f4f6; color: #1f2937; color-scheme: light; }
+  .light .text-white { color: #111827 !important; }
+  .light .text-gray-400 { color: #4b5563 !important; }
+  .light .text-gray-500 { color: #6b7280 !important; }
+  .light .text-gray-600 { color: #9ca3af !important; }
+  .light .border-white\/10 { border-color: rgba(0,0,0,0.1) !important; }
+  .light .bg-white\/5 { background: rgba(0,0,0,0.05) !important; }
 
   .glass { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); }
+  .light .glass { background: #ffffff; border-color: #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
   .glass-strong { background: rgba(15,15,22,0.92); border: 1px solid rgba(255,255,255,0.08); }
+  .light .glass-strong { background: #f9fafb; border-color: #d1d5db; }
   .grad-text { background: linear-gradient(135deg,#a855f7,#ec4899,#f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .grad-btn  { background: linear-gradient(135deg,#a855f7,#ec4899); box-shadow: 0 10px 30px rgba(168,85,247,.35); }
   .grad-btn:hover { box-shadow: 0 14px 36px rgba(236,72,153,.45); }
@@ -29,16 +40,24 @@
   .input { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 12px; color: #fff; font-size: 14px; outline: none; width: 100%; transition: border-color .15s, background .15s; }
   .input:focus { border-color: rgba(168,85,247,.55); background: rgba(255,255,255,0.06); }
   .input::placeholder { color: #6b7280; }
+  .light .input { background: #ffffff; border-color: #d1d5db; color: #111827; }
+  .light .input:focus { border-color: #a855f7; background: #ffffff; }
+
   textarea.input { resize: vertical; min-height: 80px; line-height: 1.5; }
   .btn { padding: 9px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; transition: all .15s ease; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; cursor: pointer; }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
   .btn-ghost { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #d1d5db; }
   .btn-ghost:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .light .btn-ghost { background: transparent; border-color: transparent; color: #374151; }
+  .light .btn-ghost:hover { background: #e5e7eb; color: #111827; }
   .btn-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
   .btn-danger:hover { background: rgba(239,68,68,0.18); color: #fff; }
   .card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; transition: border-color .18s, background .18s; }
   .card:hover { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
+  .light .card { background: #ffffff; border-color: #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  .light .card:hover { border-color: #cbd5e1; background: #f8fafc; }
   .stat-card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
+  .light .stat-card { background: linear-gradient(180deg, #ffffff, #f8fafc); border-color: #e5e7eb; }
   .pill[data-c] { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
 
   .timeline-line { position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.08); }
@@ -50,6 +69,7 @@
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
   .modal-bg { background: rgba(0,0,0,0.85); }
+  .light .modal-bg { background: rgba(255,255,255,0.85); }
   .modal-enter { animation: modalIn .22s ease forwards; }
   @keyframes modalIn { from { opacity:0; transform: translateY(8px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
   .fade-in { animation: fadeIn .25s ease both; }
@@ -76,6 +96,9 @@
     box-shadow: 0 30px 80px rgba(0,0,0,0.5);
     animation: modalIn .3s ease forwards;
   }
+  .light .auth-card {
+    background: #ffffff; border-color: #e5e7eb; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
 
   /* ==== Profile / Avatar ==== */
   .avatar {
@@ -92,6 +115,7 @@
     box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 8px; z-index: 50;
     animation: modalIn .15s ease forwards;
   }
+  .light .profile-menu { background: #ffffff; border-color: #e5e7eb; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
   .profile-menu button {
     width: 100%; text-align: left; padding: 9px 12px; border-radius: 10px;
     font-size: 13px; color: #d1d5db; display: flex; align-items: center; gap: 10px;
@@ -131,11 +155,11 @@
       </div>
       <label class="block">
         <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">E-Mail</span>
-        <input id="setup_email" type="email" class="input" placeholder="du@example.com" required />
+        <input id="setup_email" type="email" class="input" placeholder="deine@email.de" required />
       </label>
       <label class="block">
         <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Benutzername</span>
-        <input id="setup_username" class="input" placeholder="z. B. nabil" minlength="2" />
+        <input id="setup_username" class="input" placeholder="z. B. max" minlength="2" />
       </label>
       <label class="block">
         <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Passwort</span>
@@ -149,7 +173,7 @@
     <form id="loginForm" class="hidden space-y-4">
       <label class="block">
         <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">E-Mail</span>
-        <input id="login_email" type="email" class="input" placeholder="du@example.com" autocomplete="username" required />
+        <input id="login_email" type="email" class="input" placeholder="deine@email.de" autocomplete="username" required />
       </label>
       <label class="block">
         <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Passwort</span>
@@ -180,6 +204,7 @@
     </div>
 
     <div class="flex items-center gap-2 relative">
+      <button id="themeToggleBtn" class="btn btn-ghost px-2 text-lg mr-1" title="Hell/Dunkel Modus wechseln">🌙</button>
       <button id="btnAdd" class="btn grad-btn text-white">＋ Neue Bewerbung</button>
       <button id="profileBtn" class="flex items-center gap-2 ml-1 px-2 py-1 rounded-xl hover:bg-white/5 transition-all" title="Profil">
         <div class="avatar" id="navAvatar">U</div>
@@ -1447,6 +1472,15 @@ function wire(){
   // Auth forms
   $('setupForm').addEventListener('submit', handleSetup);
   $('loginForm').addEventListener('submit', handleLogin);
+
+  // Theme Toggle
+  const themeToggle = $('themeToggleBtn');
+  if (document.documentElement.classList.contains('light')) themeToggle.textContent = '☀️';
+  themeToggle.addEventListener('click', () => {
+    const isLight = document.documentElement.classList.toggle('light');
+    localStorage.setItem('jt_theme', isLight ? 'light' : 'dark');
+    themeToggle.textContent = isLight ? '☀️' : '🌙';
+  });
 
   // Toolbar
   $('search').addEventListener('input', e => { state.search = e.target.value; render(); });
