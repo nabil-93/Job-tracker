@@ -219,6 +219,9 @@ img, video { max-width: 100%; height: auto; }
 .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); }
 .shadow-\[0_0_20px_rgba\(245\,158\,11\,0\.15\)\] { box-shadow: 0 0 20px rgba(245, 158, 11, 0.15); }
 .grayscale { filter: grayscale(100%); }
+.backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+.animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 
 /* ===== TRANSITIONS ===== */
 .transition { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
