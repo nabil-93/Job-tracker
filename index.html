@@ -384,8 +384,11 @@
         <input id="f_interviewDate" type="datetime-local" class="input border-amber-500/30" />
       </label>
 
-      <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Job-URL</span>
-        <input id="f_jobUrl" type="url" class="input" placeholder="https://…" /></label>
+      <div class="block">
+        <span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Job-URL</span>
+        <div id="urlsList" class="space-y-2"></div>
+        <button type="button" id="btnAddUrl" class="btn btn-ghost text-xs mt-2">＋ Weiterer Link</button>
+      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <label class="block"><span class="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Ansprechpartner</span>
@@ -691,7 +694,8 @@ function filtered(){
   if (state.filterStarred)          arr = arr.filter(b => b.starred);
   if (state.search.trim()){
     const q = state.search.toLowerCase();
-    arr = arr.filter(b => [b.job_title,b.company,b.location,b.platform,b.job_type,b.requirements,b.notes,b.contact_person]
+    arr = arr.filter(b => [b.job_title,b.company,b.location,b.platform,b.job_type,b.requirements,b.notes,b.contact_person,
+      ...readUrls(b).flatMap(u => [u.label, u.url])]
       .some(v => (v||'').toLowerCase().includes(q)));
   }
   switch(state.sortBy){
@@ -1014,6 +1018,69 @@ function render(){
 }
 
 // =============================================================
+// Job-URLs (mehrere Links pro Bewerbung)
+// =============================================================
+// Normalisiert job_url (alt, ein String) + job_urls (neu, JSON-Array)
+// zu einer Liste [{label, url}]. Bleibt rückwärtskompatibel.
+function readUrls(b){
+  const out = [];
+  const seen = new Map();
+  const push = (label, url) => {
+    const u = (url||'').trim();
+    const l = (label||'').trim();
+    if (!u) return;
+    if (seen.has(u)){
+      // Gleiche URL schon da: ein vorhandenes Label nicht durch ein leeres ersetzen.
+      const prev = seen.get(u);
+      if (l && !prev.label) prev.label = l;
+      return;
+    }
+    const entry = { label: l, url: u };
+    seen.set(u, entry);
+    out.push(entry);
+  };
+  push('', b.job_url);
+  const extra = Array.isArray(b.job_urls) ? b.job_urls : [];
+  for (const it of extra){
+    if (typeof it === 'string') push('', it);
+    else if (it && typeof it === 'object') push(it.label, it.url);
+  }
+  return out;
+}
+
+function urlRowHTML(entry, i){
+  const first = i === 0;
+  return `
+    <div class="urlRow flex gap-2 items-center">
+      <input class="urlLabel input flex-shrink-0" style="max-width: 140px;" value="${esc(entry.label||'')}"
+             placeholder="${first ? 'z. B. Indeed' : 'z. B. Firma'}" />
+      <input class="urlValue input flex-1 min-w-0" type="url" value="${esc(entry.url||'')}" placeholder="https://…" />
+      <button type="button" class="urlRemove btn btn-danger text-xs flex-shrink-0" title="Link entfernen">🗑</button>
+    </div>`;
+}
+
+function renderUrls(entries){
+  const list = entries && entries.length ? entries : [{ label:'', url:'' }];
+  $('urlsList').innerHTML = list.map(urlRowHTML).join('');
+}
+
+function addUrlRow(){
+  const list = $('urlsList');
+  list.insertAdjacentHTML('beforeend', urlRowHTML({ label:'', url:'' }, list.children.length));
+  const rows = list.querySelectorAll('.urlRow');
+  rows[rows.length-1].querySelector('.urlValue').focus();
+}
+
+// Liest die Rows aus dem Formular: erster Link -> job_url, Rest -> job_urls.
+function collectUrls(){
+  const entries = [...$('urlsList').querySelectorAll('.urlRow')].map(row => ({
+    label: row.querySelector('.urlLabel').value.trim(),
+    url:   row.querySelector('.urlValue').value.trim(),
+  })).filter(e => e.url);
+  return { job_url: entries.length ? entries[0].url : '', job_urls: entries };
+}
+
+// =============================================================
 // Modal (add/edit)
 // =============================================================
 function openModal(id=null){
@@ -1033,7 +1100,7 @@ function openModal(id=null){
     $('f_appliedAt').value = (b.applied_at||'').slice(0,10);
     $('f_status').value = b.status;
     $('f_salary').value = b.salary || '';
-    $('f_jobUrl').value = b.job_url || '';
+    renderUrls(readUrls(b));
     $('f_contactPerson').value = b.contact_person || '';
     $('f_contactEmail').value = b.contact_email || '';
     $('f_requirements').value = b.requirements || '';
@@ -1053,6 +1120,7 @@ function openModal(id=null){
     $('modalEyebrow').textContent = 'Neue Bewerbung';
     $('modalTitle').textContent = 'Stelle erfassen';
     $('form').reset();
+    renderUrls([]);
     $('f_id').value = tempId;
     $('f_appliedAt').value = todayISO();
     $('f_status').value = 'beworben';
@@ -1121,6 +1189,7 @@ function renderTimeline(b){
 async function saveBewerbung(e){
   e.preventDefault();
   const id = $('f_id').value;
+  const urls = collectUrls();
   const data = {
     job_title:      $('f_jobTitle').value.trim(),
     company:        $('f_company').value.trim(),
@@ -1130,7 +1199,8 @@ async function saveBewerbung(e){
     applied_at:     $('f_appliedAt').value || todayISO(),
     status:         $('f_status').value,
     salary:         $('f_salary').value.trim(),
-    job_url:        $('f_jobUrl').value.trim(),
+    job_url:        urls.job_url,
+    job_urls:       urls.job_urls,
     contact_person: $('f_contactPerson').value.trim(),
     contact_email:  $('f_contactEmail').value.trim(),
     requirements:   $('f_requirements').value,
@@ -1329,7 +1399,7 @@ async function exportMyData(){
     }
     items.push({
       job_title: b.job_title, company: b.company, location: b.location, platform: b.platform,
-      job_url: b.job_url, applied_at: b.applied_at, status: b.status, salary: b.salary,
+      job_url: b.job_url, job_urls: readUrls(b), applied_at: b.applied_at, status: b.status, salary: b.salary,
       contact_person: b.contact_person, contact_email: b.contact_email, requirements: b.requirements,
       notes: b.notes, starred: b.starred, interview_date: b.interview_date, interview_notes: b.interview_notes,
       created_at: b.created_at, updated_at: b.updated_at,
@@ -1368,6 +1438,7 @@ async function importMyData(file){
         location: it.location || '',
         platform: it.platform || '',
         job_url: it.job_url || '',
+        job_urls: readUrls(it),
         applied_at: it.applied_at || todayISO(),
         status: STATUS_KEYS.includes(it.status) ? it.status : 'beworben',
         salary: it.salary || '',
@@ -1600,6 +1671,21 @@ function wire(){
     }
   });
   $('f_status').addEventListener('change', e => toggleInterviewFields(e.target.value));
+
+  // Job-URLs
+  $('btnAddUrl').addEventListener('click', addUrlRow);
+  $('urlsList').addEventListener('click', e => {
+    const btn = e.target.closest('.urlRemove');
+    if (!btn) return;
+    const rows = $('urlsList').querySelectorAll('.urlRow');
+    // Letzte Zeile nie entfernen — nur leeren, damit immer ein Feld da ist.
+    if (rows.length <= 1){
+      rows[0].querySelector('.urlLabel').value = '';
+      rows[0].querySelector('.urlValue').value = '';
+    } else {
+      btn.closest('.urlRow').remove();
+    }
+  });
 
   // Files
   let pendingKind = 'other';
