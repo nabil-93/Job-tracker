@@ -59,6 +59,7 @@ img, video { max-width: 100%; height: auto; }
 .items-center { align-items: center; }
 .items-start { align-items: flex-start; }
 .justify-center { justify-content: center; }
+.justify-start { justify-content: flex-start; }
 .justify-between { justify-content: space-between; }
 .gap-1 { gap: 0.25rem; }
 .gap-2 { gap: 0.5rem; }
@@ -244,6 +245,7 @@ img, video { max-width: 100%; height: auto; }
 .pointer-events-none { pointer-events: none; }
 .pointer-events-auto { pointer-events: auto; }
 .accent-amber-500 { accent-color: #f59e0b; }
+.accent-purple-500 { accent-color: #a855f7; }
 .visible { visibility: visible; }
 
 /* ===== HOVER STATES ===== */
